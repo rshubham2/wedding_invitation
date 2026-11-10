@@ -1,0 +1,99 @@
+/* Keepsake: an opening played as a film that ends on the card, and a first screen that is that card. */
+
+/* ── The first screen: the film's last frame, laid out as the gate laid it out ── */
+.layout-keepsake .hero.custom { background: var(--night); }
+.ks-hero { position: relative; width: 100%; height: 100svh; overflow: hidden; }
+/* The first screen fills the window as the gate does, so nothing moves at the hand-over, which put
+   "Scroll down" just under the fold, where guests never saw it (a Kanjivaram couple, 2 November
+   2026). It sits over the foot of the first screen instead, on the paper fading in there. */
+.layout-keepsake .hero::after { height: max(9%, 104px); }
+.layout-keepsake .down { z-index: 4; margin-top: -70px; padding-bottom: calc(8px + var(--safe-b)); background: none; }
+:root.in-phone .layout-keepsake .down { padding-bottom: 22px; }
+/* The night shows round the art from the hero itself, so the words are judged against the art they sit on. */
+:root.in-phone .ks-hero { height: 100vh; }
+.ks-fill { position: absolute; inset: 0; display: none; background: radial-gradient(90% 75% at 50% 40%, color-mix(in srgb, var(--night) 80%, var(--gold) 20%), var(--night) 78%); }
+.ks-hero.framed .ks-fill { display: block; }
+.ks-mirror { position: absolute; display: none; background-repeat: no-repeat; transform: scaleY(-1); pointer-events: none; }
+.ks-hero.mirrored .ks-mirror { display: block; }
+.ks-box { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.ks-hero.framed .ks-box { box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42), 0 2px 6px rgba(0, 0, 0, 0.25); }
+.ks-art, .ks-loop { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.ks-loop { opacity: 0; transition: opacity 600ms ease; }
+.ks-loop.on { opacity: 1; }
+.ks-glints { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+
+/* ── The words on the card, sized to the card (cq units of the words' own box) ── */
+.ks-words { --k: 1; position: absolute; container-type: size; display: grid; align-content: center; justify-items: center; text-align: center; z-index: 3; pointer-events: none; }
+.ks-words > *, .ks-names > * { margin: 0; }
+.ks-names { display: grid; justify-items: center; }
+.ks-pre { font: 500 max(12px, calc(6.2cqw * var(--k)))/1.25 var(--serif); letter-spacing: 0.01em; margin-bottom: calc(3cqw * var(--k)) !important; }
+.ks-pre:is(:lang(hi), :lang(mr)) { font: 400 max(13px, calc(6.4cqw * var(--k)))/1.5 var(--deva); }
+.ks-name { font: 400 calc(17cqw * var(--k))/1.02 var(--script); white-space: nowrap; background: var(--foil); background-size: 220% 100%; background-position: 0% 0; -webkit-background-clip: text; background-clip: text; color: transparent; padding: 0.22em 0.24em 0.32em; margin: -0.22em -0.12em -0.32em !important; }
+.ks-name:is(:lang(hi), :lang(mr)) { font: 400 calc(13.5cqw * var(--k))/1.25 var(--deva); }
+.ks-amp { font: italic 400 calc(9cqw * var(--k))/1 var(--serif); background: var(--foil-deep); -webkit-background-clip: text; background-clip: text; color: transparent; padding: 0 0.1em; margin: 0 0 0.1em !important; }
+.ks-amp:is(:lang(hi), :lang(mr)) { font: 400 calc(6.6cqw * var(--k))/1.4 var(--deva); }
+.ks-rule { display: block; width: 46%; margin: calc(2.4cqw * var(--k)) 0 calc(1.6cqw * var(--k)) !important; color: var(--gold); }
+.ks-rule .divider-art, .ks-rule .orn { display: block; width: 100%; height: auto; }
+.ks-date { font: 500 max(10.5px, calc(4.5cqw * var(--k)))/1.55 var(--serif); letter-spacing: 0.2em; padding-inline-start: 0.2em; text-transform: uppercase; }
+.ks-date:is(:lang(hi), :lang(mr)) { letter-spacing: 0; padding-inline-start: 0; text-transform: none; font: 400 max(12px, calc(5.4cqw * var(--k)))/1.5 var(--deva); }
+.ks-words.ink-dark .ks-pre, .ks-words.ink-dark .ks-date { color: var(--ink); }
+/* On a light card the names are a deeper foil, so they read at a glance (the theme's gold is tuned for the page). */
+.ks-words.ink-dark .ks-name { --foil: linear-gradient(100deg, color-mix(in srgb, var(--gold-deep) 78%, black) 0%, var(--gold-deep) 28%, color-mix(in srgb, var(--gold-deep) 84%, white) 46%, var(--gold-deep) 64%, color-mix(in srgb, var(--gold-deep) 80%, black) 100%); }
+.ks-words.ink-dark .ks-amp { background: none; color: var(--gold-deep); }
+.ks-words.ink-light .ks-pre, .ks-words.ink-light .ks-date { color: #fbf3e2; text-shadow: 0 0 14px rgba(0, 0, 0, 0.6), 0 0 3px rgba(0, 0, 0, 0.5); }
+.ks-words.ink-light .ks-name { --foil: linear-gradient(100deg, #e9cc8a 0%, #fff4d6 30%, #e2bd70 55%, #fff1c9 75%, #d8b062 100%); filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.55)); }
+.ks-words.ink-light .ks-amp { --foil-deep: linear-gradient(100deg, #e2bd70 0%, #fff1c9 45%, #d9b062 100%); }
+/* Light words over a picture (Jharokha Film's dusk sky) sit in a soft veil of the night, so the small
+   lines read at 4.5:1 however bright the sky behind them is. It comes in with the words. */
+.ks-words.ink-light::before { content: ""; position: absolute; inset: -42% -34% -62%; z-index: -1; pointer-events: none;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--night) 68%, transparent), color-mix(in srgb, var(--night) 62%, transparent) 50%, color-mix(in srgb, var(--night) 34%, transparent) 76%, transparent); }
+.ks-write.ink-light::before { animation: ks-veil 1400ms ease-out both; }
+@keyframes ks-veil { from { opacity: 0; } to { opacity: 1; } }
+
+/* Waiting under the film until its last frame. */
+.ks-words.ks-later { opacity: 0; }
+/* Written on: each line wipes in from the left out of a soft blur, the names catch the light. */
+.ks-write > *, .ks-write .ks-names > * { animation: ks-wipe 900ms var(--ease-out) both; }
+.ks-write > .ks-pre { animation-delay: 0ms; }
+.ks-write .ks-names > :nth-child(1) { animation-delay: 220ms; animation-duration: 1100ms; }
+.ks-write .ks-names > :nth-child(2) { animation-delay: 560ms; }
+.ks-write .ks-names > :nth-child(3) { animation-delay: 700ms; animation-duration: 1100ms; }
+.ks-write > .ks-rule { animation-delay: 1050ms; }
+.ks-write > .ks-date { animation-delay: 1200ms; }
+.ks-write .ks-name { animation-name: ks-wipe, ks-shine; animation-duration: 1100ms, 2400ms; animation-timing-function: var(--ease-out), ease-in-out; animation-fill-mode: both, both; }
+.ks-write .ks-names > :nth-child(3).ks-name { animation-delay: 700ms, 900ms; }
+.ks-write .ks-names > :nth-child(1).ks-name { animation-delay: 220ms, 420ms; }
+/* A design's emblem over the words (opening.emblem): it blooms first, and the words follow it. */
+.ks-emblem { display: block; width: calc(30cqw * var(--k)); height: auto; margin: 0 0 calc(3cqw * var(--k)) !important; }
+.ks-write > .ks-emblem { animation: ks-bloom 1000ms var(--ease-out) both; }
+@keyframes ks-bloom { from { opacity: 0; scale: 0.82; filter: blur(5px); } to { opacity: 1; scale: 1; filter: blur(0); } }
+.ks-write.has-emblem > .ks-pre { animation-delay: 650ms; }
+.ks-write.has-emblem .ks-names > :nth-child(2) { animation-delay: 1210ms; }
+.ks-write.has-emblem > .ks-rule { animation-delay: 1700ms; }
+.ks-write.has-emblem > .ks-date { animation-delay: 1850ms; }
+.ks-write.has-emblem .ks-names > :nth-child(1).ks-name { animation-delay: 870ms, 1070ms; }
+.ks-write.has-emblem .ks-names > :nth-child(3).ks-name { animation-delay: 1350ms, 1550ms; }
+@keyframes ks-wipe {
+  from { opacity: 0; filter: blur(6px); clip-path: inset(-30% 100% -40% -10%); translate: 0 6px; }
+  60% { opacity: 1; }
+  to { opacity: 1; filter: blur(0); clip-path: inset(-30% -10% -40% -10%); translate: 0 0; }
+}
+@keyframes ks-shine { from { background-position: 100% 0; } to { background-position: 0% 0; } }
+
+/* ── The seal and its two halves ── */
+.op-keepsake .ks-seal { z-index: 6; }
+.ks-half { position: absolute; inset: 0; width: 100%; height: 100%; transform-origin: 50% 40%; pointer-events: none; }
+
+/* ── Glints ── */
+.ks-glint { position: absolute; translate: -50% -50%; pointer-events: none; background: radial-gradient(circle, rgba(255, 250, 235, 0.95) 0 8%, rgba(255, 236, 190, 0.5) 14%, transparent 42%), conic-gradient(from 0deg, transparent 0 20%, rgba(255, 246, 220, 0.85) 25%, transparent 30% 45%, rgba(255, 246, 220, 0.85) 50%, transparent 55% 70%, rgba(255, 246, 220, 0.85) 75%, transparent 80% 95%, rgba(255, 246, 220, 0.85) 100%); mask: radial-gradient(circle, #000 0 30%, transparent 70%); -webkit-mask: radial-gradient(circle, #000 0 30%, transparent 70%); mix-blend-mode: screen; animation: ks-glint 1100ms ease-in-out both; }
+@keyframes ks-glint { from { opacity: 0; scale: 0.2; rotate: 0deg; } 45% { opacity: 1; scale: 1; } to { opacity: 0; scale: 0.4; rotate: 40deg; } }
+
+/* ── Fireworks (opening.fireworks), drawn on a canvas under the words ── */
+.ks-fw { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) { .ks-write > *, .ks-write .ks-names > *, .ks-write.ink-light::before { animation: none; } .ks-glint, .ks-fw { display: none; } }
+.quiet .ks-write > *, .quiet .ks-write .ks-names > *, .quiet .ks-write.ink-light::before { animation: none; }
+
+/* The song card mixes the accent into its ground; a light accent (Sheesh Mahal's candle gold) leaves
+   that ground too light for the artist's line, so on a dark page it is mixed deeper. */
+body.dark.layout-keepsake .song-card { background: linear-gradient(170deg, color-mix(in srgb, var(--accent) 44%, #120a08), color-mix(in srgb, var(--accent) 22%, #0a0605)); }

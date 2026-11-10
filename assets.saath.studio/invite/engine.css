@@ -1,0 +1,640 @@
+/* The invite engine's styles. Every collection sets the palette and fonts through theme.json;
+   nothing here names a collection except the few opening-specific touches at the end. */
+:root {
+  --ink: #574d43;
+  --paper: #fbf8f2;
+  --accent: #a3122f;
+  --accent2: #e88b1e;
+  --gold: #b08d4c;
+  --night: #2a1f18;
+  --linen: color-mix(in srgb, var(--paper) 82%, var(--ink));
+  --ink-soft: color-mix(in srgb, var(--ink) 68%, var(--paper));
+  --hi: color-mix(in srgb, var(--paper) 55%, white);
+  --lo: color-mix(in srgb, var(--ink) 22%, transparent);
+  --line: color-mix(in srgb, var(--gold) 32%, transparent);
+  --gold-deep: color-mix(in srgb, var(--gold) 72%, black);
+  --foil: linear-gradient(100deg, color-mix(in srgb, var(--gold) 72%, black) 0%, var(--gold) 22%, color-mix(in srgb, var(--gold) 45%, white) 38%, color-mix(in srgb, var(--gold) 92%, black) 55%, color-mix(in srgb, var(--gold) 62%, white) 72%, color-mix(in srgb, var(--gold) 70%, black) 100%);
+  --foil-deep: linear-gradient(100deg, color-mix(in srgb, var(--gold) 55%, black) 0%, color-mix(in srgb, var(--gold) 85%, black) 30%, color-mix(in srgb, var(--gold) 70%, white) 48%, color-mix(in srgb, var(--gold) 80%, black) 66%, color-mix(in srgb, var(--gold) 50%, black) 100%);
+  --script: "Pinyon Script", "Tiro Devanagari Hindi", cursive;
+  --serif: "Cormorant Garamond", "Tiro Devanagari Hindi", Georgia, serif;
+  --deva: "Tiro Devanagari Hindi", "Cormorant Garamond", serif;
+  --display: var(--serif);
+  --paper-tex: none;
+  --col: min(100vw, 460px);
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-io: cubic-bezier(0.77, 0, 0.175, 1);
+}
+/* Drawn inside the site's iPhone mockup (?phone=1): inside a frame env() is always 0, so the
+   island and home bar get an iPhone 15's real insets. The painting still runs under the island. */
+:root.in-phone { --safe-t: 59px; --safe-b: 34px; }
+:root.in-phone [id] { scroll-margin-top: var(--safe-t); }
+/* A section's own top padding (56 to 64px) already clears the island, so it lands flush. */
+:root.in-phone .sec[id] { scroll-margin-top: 0; }
+body.dark {
+  --ink-soft: color-mix(in srgb, var(--ink) 80%, var(--paper));
+  --linen: color-mix(in srgb, var(--paper) 85%, black);
+  --hi: color-mix(in srgb, var(--paper) 80%, white);
+  --lo: rgba(0, 0, 0, 0.45);
+  --gold-deep: color-mix(in srgb, var(--gold) 70%, white);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body { margin: 0; background: var(--linen); color: var(--ink); font: 400 18px/1.55 var(--serif); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+html:has(body.sealed), body.sealed { overflow: hidden; height: 100svh; }
+:is(:lang(hi), :lang(mr)) { font-family: var(--deva); }
+img { display: block; max-width: 100%; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+.skip { position: fixed; left: 12px; top: 12px; z-index: 50; padding: 10px 14px; background: var(--paper); color: var(--ink); border-radius: 8px; transform: translateY(-160%); transition: transform 200ms var(--ease-out); }
+.skip:focus { transform: none; }
+/* Round the invitation on a wide screen: a dim room in the theme's night colour, lit where the
+   invitation stands, the way a story is shown on a laptop. Never a blurred copy of the art. */
+.backdrop { position: fixed; inset: 0; z-index: -1; background: var(--linen); }
+@media (min-width: 560px) { .backdrop { background: radial-gradient(90% 75% at 50% 40%, color-mix(in srgb, var(--night) 80%, var(--gold) 20%), var(--night) 78%); } }
+
+/* ───────── The gate ───────── */
+/* The opening's painting fills the screen, under the island and the home bar, and the greeting and
+   the hint sit on it (founder, 21 October 2026). The engine sizes the painting's box (fitGate). */
+.gate {
+  position: fixed; inset: 0; z-index: 20; overflow: hidden;
+  background: radial-gradient(120% 80% at 50% 45%, color-mix(in srgb, var(--paper) 70%, transparent), transparent 70%), var(--linen);
+  transition: opacity 900ms var(--ease-out), visibility 0s linear 900ms;
+}
+body.dark .gate { background: radial-gradient(120% 80% at 50% 45%, color-mix(in srgb, var(--night) 60%, transparent), transparent 70%), var(--night); }
+/* Until the painting loads, the screen takes its measured edge colours. */
+.gate[data-edge], body.dark .gate[data-edge] { background: linear-gradient(var(--gate-top) 18%, var(--gate-bottom) 82%); }
+.gate.gone { opacity: 0; visibility: hidden; pointer-events: none; }
+/* A screen much wider than the painting (a laptop) shows its whole height in the middle, in the
+   same dim room as the invitation (.backdrop), not a blurred copy of it. */
+.gate-fill { position: absolute; inset: 0; display: none; background: radial-gradient(90% 75% at 50% 40%, color-mix(in srgb, var(--night) 80%, var(--gold) 20%), var(--night) 78%); }
+.gate.framed .gate-fill { display: block; }
+.gate-mirror { position: absolute; display: none; background-repeat: no-repeat; transform: scaleY(-1); pointer-events: none; }
+.gate.mirrored .gate-mirror { display: block; }
+.gate.framed .op-frame { box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42), 0 2px 6px rgba(0, 0, 0, 0.25); }
+.stage { position: absolute; inset: 0; z-index: 0; }
+
+/* Taps pass through the words to the painting. Each takes the tone that reads on the part of the
+   painting under it, and a soft frost when that part is busy (readGate, as the hero's words do). */
+.greet, .hint { position: absolute; z-index: 1; left: 0; right: 0; width: fit-content; max-width: calc(100% - 32px); margin: 0 auto; text-align: center; text-wrap: balance; pointer-events: none; isolation: isolate; --frost-rgb: 0 0 0; --frost-a: 0; --frost-blur: 0px; }
+/* As much room above as the hero's words have: 7.5% of the screen, and 4% under an island or notch
+   (in the site's phone mockup the island ends 52px down). */
+.greet { top: max(7.5svh, calc(var(--safe-t) + 4svh)); font: 400 clamp(32px, 9vw, 40px)/1.1 var(--script); color: var(--gate-lo); }
+:root.in-phone .greet { top: calc(52px + 4svh); }
+.hint { bottom: max(calc(var(--safe-b) + 22px), 5svh); font: italic 500 18px/1.3 var(--serif); color: var(--gate-ink); animation: hint 2.8s ease-in-out infinite; }
+.greet small { display: block; margin-top: 6px; font: 600 13px/1.4 var(--serif); letter-spacing: 0.22em; text-transform: uppercase; color: var(--gate-ink); }
+.greet:is(:lang(hi), :lang(mr)) { font: 400 27px/1.3 var(--deva); }
+.greet:is(:lang(hi), :lang(mr)) small { letter-spacing: 0.02em; text-transform: none; font: 400 15.5px/1.5 var(--deva); }
+.hint:is(:lang(hi), :lang(mr)) { font: 400 16.5px/1.4 var(--deva); }
+.greet.tone-dark { color: var(--gate-hi); }
+.greet.tone-dark small, .hint.tone-dark { color: var(--gate-cream); }
+.greet.tone-dark, .hint.tone-dark { text-shadow: 0 0 18px rgba(0, 0, 0, 0.62), 0 1px 3px rgba(0, 0, 0, 0.55); }
+.greet.tone-light, .hint.tone-light { text-shadow: 0 0 18px rgb(255 252 244 / 0.85), 0 0 4px rgb(255 252 244 / 0.7); }
+.greet::before, .hint::before { content: ""; position: absolute; z-index: -1; pointer-events: none; inset: -30% -16%; background: radial-gradient(closest-side, rgb(var(--frost-rgb) / var(--frost-a)) 0%, rgb(var(--frost-rgb) / calc(var(--frost-a) * 0.8)) 55%, rgb(var(--frost-rgb) / 0) 100%); -webkit-backdrop-filter: blur(var(--frost-blur)); backdrop-filter: blur(var(--frost-blur)); -webkit-mask-image: radial-gradient(closest-side, #000 60%, transparent 100%); mask-image: radial-gradient(closest-side, #000 60%, transparent 100%); }
+.hint::before { inset: -70% -18%; }
+@keyframes hint { 50% { translate: 0 -3px; } }
+.gate.opening .greet, .gate.opening .hint { opacity: 0; animation: none; transition: opacity 400ms ease; }
+
+.op-frame { position: absolute; inset: 0; overflow: visible; }
+.op-frame > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.op-pulse { position: absolute; inset: -9%; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--gold) 70%, transparent); animation: pulse 2.8s var(--ease-out) infinite; pointer-events: none; }
+@keyframes pulse { 0% { scale: 0.86; opacity: 0.9; } 70%, 100% { scale: 1.25; opacity: 0; } }
+.op-glow { position: absolute; width: 14%; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; pointer-events: none; mix-blend-mode: screen; background: radial-gradient(closest-side, rgba(255, 246, 220, 0.95), rgba(255, 214, 140, 0.5) 45%, rgba(255, 200, 120, 0) 100%); opacity: 0; scale: 0.4; transition: scale 1800ms var(--ease-out), opacity 600ms ease; }
+.op-glow.on { opacity: 1; scale: 9; }
+
+/* Envelope */
+.op-envelope { perspective: 1600px; }
+.op-inside { position: absolute; inset: 0; overflow: hidden; background: linear-gradient(180deg, #efe4cf, #f7efdf 45%, #ead9b8) center / cover; }
+.op-inside .op-light { position: absolute; left: var(--cx); top: var(--cy); width: 70%; aspect-ratio: 1 / 1.3; translate: -50% -50%; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 253, 246, 1), rgba(255, 240, 205, 0.95) 22%, rgba(250, 222, 160, 0.55) 52%, rgba(246, 214, 150, 0)); opacity: 0; scale: 0.15; }
+.op-flap { position: absolute; inset: 0; background: #f4eee4 center / 100% 100% no-repeat; backface-visibility: hidden; transition: transform 1250ms cubic-bezier(0.55, 0, 0.25, 1), opacity 650ms ease 650ms, filter 1250ms ease; }
+.op-flap.top { clip-path: polygon(0 0, 100% 0, var(--cx) var(--cy)); transform-origin: 50% 0; }
+.op-flap.bottom { clip-path: polygon(0 100%, 100% 100%, var(--cx) var(--cy)); transform-origin: 50% 100%; }
+.op-flap.left { clip-path: polygon(0 0, 0 100%, var(--cx) var(--cy)); transform-origin: 0 50%; filter: brightness(0.985); }
+.op-flap.right { clip-path: polygon(100% 0, 100% 100%, var(--cx) var(--cy)); transform-origin: 100% 50%; filter: brightness(0.985); }
+.op-ring { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; mix-blend-mode: screen; }
+.op-seal { position: absolute; left: var(--cx); top: var(--cy); width: 27%; aspect-ratio: 1; translate: -50% -50%; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; filter: drop-shadow(0 5px 6px rgba(70, 50, 22, 0.32)) drop-shadow(0 1px 1px rgba(70, 50, 22, 0.3)); transition: scale 160ms var(--ease-out), opacity 500ms ease, filter 500ms ease; -webkit-tap-highlight-color: transparent; }
+.op-seal canvas { width: 100%; height: 100%; display: block; }
+.op-seal:active, .op-seal.pressed { scale: 0.95; }
+.op-seal.gone { scale: 1.16; opacity: 0; filter: blur(3px); pointer-events: none; }
+.op-seal.gone .op-pulse { display: none; }
+.op-envelope.open .op-inside .op-light { opacity: 1; scale: 3.2; transition: scale 1500ms var(--ease-out) 100ms, opacity 500ms ease; }
+.op-envelope.open .op-flap { filter: brightness(0.9); }
+.op-envelope.open .op-flap.top { transform: rotateX(-112deg); opacity: 0; }
+.op-envelope.open .op-flap.bottom { transform: rotateX(112deg); opacity: 0; transition-delay: 160ms, 810ms, 160ms; }
+.op-envelope.open .op-flap.left { transform: rotateY(112deg); opacity: 0; transition-delay: 80ms, 730ms, 80ms; }
+.op-envelope.open .op-flap.right { transform: rotateY(-112deg); opacity: 0; transition-delay: 80ms, 730ms, 80ms; }
+/* An envelope lying on paper: the closed painting stays whole; the V flap folds up from its hinge
+   while the open painting (flap lying open, the card showing) fades in. */
+.op-envelope.on-paper .op-over { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity 700ms ease 420ms; }
+.op-envelope.on-paper .op-flap.top { clip-path: polygon(var(--fx0) var(--fy0), var(--fx1) var(--fy0), var(--tx) var(--ty)); transform-origin: 50% var(--fy0); z-index: 4; }
+.op-envelope.on-paper .op-seal { z-index: 6; }
+/* On the desk (openings.js unfold): the envelope's inside, the flap's paper back, the card and the pocket in front of it. */
+.op-hollow { position: absolute; inset: 0; z-index: 1; opacity: 0; transition: opacity 180ms ease; background: linear-gradient(180deg, color-mix(in srgb, var(--env-paper, #e9dcc3) 78%, #3a2a1a) 0%, color-mix(in srgb, var(--env-paper, #e9dcc3) 94%, #3a2a1a) 75%); }
+.op-flapback { position: absolute; inset: 0; z-index: 1; transform: scaleY(0); background: linear-gradient(0deg, color-mix(in srgb, var(--env-paper, #efe4cf) 92%, #5a4630), color-mix(in srgb, var(--env-paper, #efe4cf) 88%, white) 70%); }
+.op-card { position: absolute; z-index: 2; border-radius: 3px; background: var(--card-paper, #fbf6ea) var(--paper-tex) center / 420px; box-shadow: 0 1px 2px rgba(60, 40, 20, 0.25), 0 12px 28px rgba(60, 40, 20, 0.2); transform-origin: 50% 50%; will-change: transform; }
+.op-card.out { z-index: 7; }
+.op-card-in { position: absolute; inset: 6%; display: grid; place-content: center; justify-items: center; text-align: center; border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent); color: var(--gold-deep); }
+.op-card-in p { margin: 0; }
+.op-card .k { font: 500 clamp(9px, 2.5vw, 12px)/1.4 var(--serif); letter-spacing: 0.2em; text-transform: uppercase; }
+.op-card .n { padding: 0.1em 0.2em 0.18em; font: 400 clamp(22px, 7vw, 32px)/1.05 var(--script); }
+.op-card .a { font: italic 400 clamp(13px, 3.8vw, 17px)/1 var(--serif); }
+.op-card:is(:lang(hi), :lang(mr)) .k, .op-card:is(:lang(hi), :lang(mr)) .a { font-family: var(--deva); font-style: normal; letter-spacing: 0; text-transform: none; }
+.op-card:is(:lang(hi), :lang(mr)) .n { font: 400 clamp(20px, 6vw, 28px)/1.3 var(--deva); }
+.op-pocket { position: absolute; inset: 0; z-index: 3; background: center / 100% 100% no-repeat; }
+.op-envelope.on-paper .op-inside .op-light { display: none; }
+.op-envelope.on-paper.open .op-over { opacity: 0; }
+.op-envelope.on-paper.open .op-flap.top { transform: rotateX(-150deg); opacity: 0; transition-delay: 0ms, 520ms, 0ms; }
+
+/* Doors */
+.op-doors { perspective: 1400px; }
+.op-doors .op-over { transition: opacity 120ms linear 60ms; }
+.op-doors .op-over.gone { opacity: 0; }
+.op-leaf { position: absolute; transform-style: preserve-3d; transition: transform 1700ms cubic-bezier(0.6, 0, 0.2, 1); }
+.op-leaf.left { transform-origin: 0 50%; }
+.op-leaf.right { transform-origin: 100% 50%; }
+.op-leaf-face { position: absolute; inset: 0; background-repeat: no-repeat; backface-visibility: hidden; }
+.op-leaf::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0)); opacity: 0; transition: opacity 1700ms ease; }
+.op-leaf.right::after { background: linear-gradient(270deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0)); }
+.op-doors.open .op-leaf.left { transform: rotateY(96deg); }
+.op-doors.open .op-leaf.right { transform: rotateY(-96deg); }
+.op-doors.open .op-leaf::after { opacity: 1; }
+.op-seam { position: absolute; width: 4px; translate: -50% 0; background: linear-gradient(180deg, transparent, rgba(255, 220, 150, 0.95), transparent); filter: blur(2px); opacity: 0; transition: opacity 400ms ease, width 1200ms var(--ease-out); pointer-events: none; }
+.op-doors.open .op-seam { opacity: 1; width: 40%; filter: blur(14px); opacity: 0; transition: opacity 1500ms ease 200ms, width 1500ms var(--ease-out); }
+/* The open frame matches the closed one outside the doorway, so it must not move or the walls would jump. */
+.op-fore { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; }
+.op-tap { position: absolute; z-index: 5; border: 0; background: none; cursor: pointer; }
+
+/* Film: the opening as a short film. Its first frame lies on top until it plays; its last frame holds. */
+.op-film .op-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.op-film .op-end { opacity: 0; transition: opacity 400ms ease; }
+.op-film .op-end.on { opacity: 1; }
+.op-film .op-still { transition: opacity 120ms linear; }
+.op-film .op-still.gone { opacity: 0; }
+
+/* Curtains: strips of the closed panels slide to the sides and narrow, then fade into the open painting */
+.op-curtains .op-over { transition: opacity 120ms linear 60ms; }
+.op-curtains .op-over.gone { opacity: 0; }
+.op-strip { position: absolute; overflow: hidden; transition: transform 1500ms cubic-bezier(0.55, 0, 0.2, 1) var(--delay, 0ms), opacity 520ms ease calc(1150ms + var(--delay, 0ms)); }
+.op-strip.left { transform-origin: 0 50%; }
+.op-strip.right { transform-origin: 100% 50%; }
+.op-strip-face { position: absolute; inset: 0; background-repeat: no-repeat; }
+/* The folds deepen as the cloth bunches. */
+.op-fold { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0, 0, 0, 0.32), rgba(255, 240, 220, 0.06) 45%, rgba(0, 0, 0, 0.28)); opacity: 0; transition: opacity 1400ms ease var(--delay, 0ms); }
+.op-curtains.open .op-strip { transform: translateX(var(--dx)) scaleX(var(--k)); opacity: 0; }
+.op-curtains.open .op-fold { opacity: 1; }
+.op-curtains.open .op-seam { opacity: 1; width: 40%; filter: blur(14px); opacity: 0; transition: opacity 1500ms ease 200ms, width 1500ms var(--ease-out); }
+
+/* Light from a point */
+.op-reveal .op-over { will-change: mask-image; }
+.op-sparks { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.op-point { position: absolute; width: 22%; aspect-ratio: 1; translate: -50% -50%; border: 0; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 238, 200, 0.28), transparent); cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: none; }
+.op-point.holding { background: radial-gradient(closest-side, rgba(255, 238, 200, 0.55), transparent); scale: 1.08; transition: scale 650ms var(--ease-out), background 650ms ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hint, .op-pulse { animation: none; }
+  .op-flap, .op-leaf, .op-strip { transition: opacity 400ms ease !important; transform: none !important; }
+}
+
+/* ───────── The column ───────── */
+.col { position: relative; width: var(--col); margin: 0 auto; background: var(--paper); box-shadow: 0 0 0 1px var(--line), 0 30px 80px rgba(40, 28, 12, 0.14); }
+.today { position: sticky; top: 0; z-index: 5; margin: 0; padding: calc(10px + var(--safe-t)) 16px 10px; text-align: center; background: var(--accent-fill, var(--accent)); color: #fff; font: 500 15px/1.4 var(--serif); }
+.today[hidden] { display: none; }
+.hero { position: relative; overflow: hidden; background: var(--night); }
+/* A layout (invite/layouts/) draws the first screen itself. */
+.hero.custom { background: var(--paper); }
+.hero.custom .hero-art, .hero.custom .hero-words { display: none; }
+/* The painting fills the first screen like a story, with "Scroll down" just under it: never shorter
+   than the painting's own shape (so it is always cut at its sides, and the calm zone's heights hold),
+   never taller than a tall phone's. */
+.hero-art { width: 100%; height: clamp(calc(var(--col) * 1.5), calc(100svh - 72px), calc(var(--col) * 2.17)); object-fit: cover; }
+.hero.plain .hero-art { visibility: hidden; }
+.hero.plain { background: linear-gradient(180deg, color-mix(in srgb, var(--paper) 85%, var(--gold)), var(--paper)); }
+.body-open .hero-art { animation: settle 2.6s var(--ease-out) both; }
+@keyframes settle { from { scale: 1.07; } to { scale: 1; } }
+.hero-words { position: absolute; left: 15%; right: 15%; top: 12%; display: grid; justify-items: center; text-align: center; color: var(--gold-deep); text-shadow: 0 0 18px color-mix(in srgb, var(--paper) 90%, transparent), 0 0 4px color-mix(in srgb, var(--paper) 80%, transparent); }
+body.dark .hero-words, .hero.tone-dark .hero-words { text-shadow: 0 0 18px rgba(0, 0, 0, 0.7), 0 0 4px rgba(0, 0, 0, 0.6); }
+.hero.tone-dark .hw-pre, .hero.tone-dark .hw-date { color: #fff8ec; }
+.hero.tone-dark .hw-name { --foil: linear-gradient(100deg, #f3dca0 0%, #fff4d6 30%, #e8c77e 55%, #fff1c9 75%, #e2bd70 100%); filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.55)); }
+.hero-words > * { margin: 0; }
+.hw-names { display: grid; justify-items: center; }
+.hw-names > * { margin: 0; }
+/* When the calm part of the painting is short, the names share one line. */
+.hw-inline .hw-names { display: flex; align-items: baseline; justify-content: center; gap: 0.16em; white-space: nowrap; }
+.hw-inline .hw-amp { margin: 0; }
+.hero-words { --hw-k: 1; --frost-rgb: 250 245 235; --frost-a: 0; --frost-blur: 0px; z-index: 1; isolation: isolate; }
+/* The engine measures the painting under the words and frosts it when it is too busy to read. */
+.hero-words::before { content: ""; position: absolute; z-index: -1; pointer-events: none; inset: -22% -34%; background: radial-gradient(closest-side, rgb(var(--frost-rgb) / var(--frost-a)) 0%, rgb(var(--frost-rgb) / calc(var(--frost-a) * 0.8)) 55%, rgb(var(--frost-rgb) / 0) 100%); -webkit-backdrop-filter: blur(var(--frost-blur)); backdrop-filter: blur(var(--frost-blur)); -webkit-mask-image: radial-gradient(closest-side, #000 60%, transparent 100%); mask-image: radial-gradient(closest-side, #000 60%, transparent 100%); }
+.hero.tone-light { --hw-ink: var(--ink); }
+body.dark .hero.tone-light { --hw-ink: color-mix(in srgb, var(--night) 80%, black); }
+.hero.tone-light .hero-words { text-shadow: 0 0 18px color-mix(in srgb, var(--paper) 90%, transparent), 0 0 4px color-mix(in srgb, var(--paper) 80%, transparent); }
+.hero.tone-light .hw-pre, .hero.tone-light .hw-date { color: var(--hw-ink); }
+.hero.tone-light .hw-name { filter: drop-shadow(0 0 10px color-mix(in srgb, var(--paper) 90%, transparent)); }
+/* Only the names scale to fit the painting; the small lines never drop below a readable size. */
+.hw-pre { font: 500 max(15px, calc(clamp(15px, 4.4vw, 18px) * var(--hw-k)))/1.25 var(--serif); color: var(--ink); }
+/* A script capital's swash rises well above its line: keep it off the line above. */
+.hero-words > .hw-pre { margin-bottom: calc(clamp(44px, 14vw, 62px) * var(--hw-k) * 0.2); }
+.hw-inline > .hw-pre { margin-bottom: 0.2em; }
+body.dark .hw-pre, body.dark .hw-date { color: color-mix(in srgb, var(--paper) 30%, white); }
+.hw-pre:is(:lang(hi), :lang(mr)) { font: 400 max(16px, calc(17px * var(--hw-k)))/1.5 var(--deva); }
+.hw-name { font: 400 calc(clamp(44px, 14vw, 62px) * var(--hw-k))/1.02 var(--script); background: var(--foil); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--paper) 90%, transparent)); padding: 0.22em 0.24em 0.32em; margin: -0.22em -0.12em -0.32em; }
+/* Foil words show only inside their own box (background-clip: text), so a script name's swashes
+   and tails, which reach past its line, get room in the padding, given back by the margin. */
+body.dark .hw-name { filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.6)); }
+.hw-name:is(:lang(hi), :lang(mr)) { font: 400 calc(clamp(40px, 12vw, 54px) * var(--hw-k))/1.25 var(--deva); }
+.hw-amp { font: italic 400 calc(clamp(30px, 9vw, 38px) * var(--hw-k))/1 var(--serif); background: var(--foil-deep); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; margin: 0 0 0.12em; padding: 0 0.1em; }
+.hero.tone-dark .hw-amp { --foil-deep: linear-gradient(100deg, #e2bd70 0%, #fff1c9 45%, #d9b062 100%); }
+.hw-amp:is(:lang(hi), :lang(mr)) { font: 400 20px/1.4 var(--deva); margin: 0; }
+.hw-rule { width: 50%; margin: 6px 0 4px !important; color: var(--gold); display: block; }
+.hw-rule .divider-art, .hw-rule .orn { display: block; width: 100%; height: auto; }
+.hero-words.hw-inline > .hw-rule { width: min(56%, calc(190px * var(--hw-k) + 40px)); }
+.hw-date { font: 500 14px/1.5 var(--serif); letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink); }
+.hw-date:is(:lang(hi), :lang(mr)) { letter-spacing: 0; text-transform: none; font: 400 16px/1.5 var(--deva); }
+.body-open .hero-words > :not(.hw-names), .body-open .hw-names > * { animation: rise 1.4s var(--ease-out) both; }
+.body-open .hw-names > :nth-child(1) { animation-delay: 0.15s; }
+.body-open .hw-names > :nth-child(2) { animation-delay: 0.3s; }
+.body-open .hw-names > :nth-child(3) { animation-delay: 0.45s; }
+.body-open .hero-words > .hw-rule, .body-open .hero-words > .hw-date { animation-delay: 0.6s; }
+@keyframes rise { from { opacity: 0; translate: 0 14px; filter: blur(4px); } }
+/* The names carry a drop-shadow of their own, and Safari can't blend blur() into it: it left them
+   blurred for good on iPhones. They rise without the blur. */
+.body-open .hw-names > .hw-name { animation-name: rise-clear; }
+@keyframes rise-clear { from { opacity: 0; translate: 0 14px; } }
+.down { position: relative; z-index: 1; display: grid; justify-items: center; gap: 2px; padding: 14px 0 6px; color: var(--ink-soft); text-decoration: none; font: 400 26px/1 var(--script); background: var(--paper-tex) center top / 512px auto, var(--paper); }
+.down + .paper > .sec:first-child { padding-top: 30px; }
+/* The painting fades into the page, and "Scroll down" sits on that calm ground in the page's own ink. */
+.hero::after { content: ""; position: absolute; inset: auto 0 0; height: 9%; pointer-events: none; background: linear-gradient(to bottom, color-mix(in srgb, var(--paper) 0%, transparent), color-mix(in srgb, var(--paper) 55%, transparent) 45%, color-mix(in srgb, var(--paper) 92%, transparent) 78%, var(--paper)); }
+.hero.plain::after { display: none; }
+
+.down:is(:lang(hi), :lang(mr)) { font: 400 15px/1.4 var(--deva); }
+.down svg { width: 22px; height: 22px; animation: bob 2.4s ease-in-out infinite; }
+@keyframes bob { 50% { translate: 0 4px; } }
+
+/* ───────── Paper ───────── */
+.paper { position: relative; background: var(--paper-tex) center / 512px auto, var(--paper); }
+.sec { padding: 64px 24px 8px; text-align: center; }
+.sec + .sec { padding-top: 56px; }
+.h { margin: -0.18em 0 -0.26em; font: 400 clamp(38px, 10.6vw, 46px)/1.15 var(--script); background: var(--foil); -webkit-background-clip: text; background-clip: text; color: transparent; padding: 0.18em 0.24em 0.26em; }
+.h:is(:lang(hi), :lang(mr)) { font: 400 30px/1.4 var(--deva); padding-top: 4px; }
+.h3 { margin: 26px 0 6px; font: 500 15px/1.4 var(--serif); letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-soft); }
+.h3:is(:lang(hi), :lang(mr)) { letter-spacing: 0; text-transform: none; font: 400 17px/1.4 var(--deva); }
+.sec-orn { margin: 8px auto 14px; color: var(--gold); width: 150px; }
+.sec-orn.small { width: 110px; margin: 6px auto; }
+.sec-orn .orn, .sec-orn .divider-art { display: block; width: 100%; height: auto; }
+.orn { width: 150px; height: 14px; }
+.lede { margin: 0 auto; max-width: 30ch; color: var(--ink-soft); font-size: 18px; }
+.lede:is(:lang(hi), :lang(mr)) { font-size: 16px; }
+.soft { color: var(--ink-soft); }
+.caps { font: 500 13px/1.6 var(--serif); letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-soft); }
+.caps:is(:lang(hi), :lang(mr)) { font: 400 15px/1.6 var(--deva); letter-spacing: 0; text-transform: none; }
+.reveal { opacity: 0; translate: 0 18px; transition: opacity 900ms var(--ease-out), translate 900ms var(--ease-out); }
+.reveal.in { opacity: 1; translate: 0 0; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; translate: none; transition: none; } .body-open .hero-art, .body-open .hero-words > *, .body-open .hw-names > * { animation: none; } .down svg { animation: none; } }
+/* The builder's preview (?quiet) loads again after every edit: nothing plays in, so only the edit changes. */
+.quiet .reveal { opacity: 1; translate: none; transition: none; }
+.quiet .body-open .hero-art, .quiet .body-open .hero-words > *, .quiet .body-open .hw-names > * { animation: none; }
+
+.note { padding-top: 48px; }
+.note-text { margin: 8px auto 0; max-width: 28ch; font: italic 400 21px/1.5 var(--serif); color: var(--ink); }
+.note-text:is(:lang(hi), :lang(mr)) { font: 400 18px/1.7 var(--deva); }
+
+/* The date, under gold foil */
+.sparkle-line { margin: 6px 0 22px; font: italic 500 18px/1.3 var(--serif); color: var(--ink); }
+.sparkle-line:is(:lang(hi), :lang(mr)) { font: 400 16px/1.5 var(--deva); }
+.sparkle-line b { color: var(--gold-text, var(--gold)); font-style: normal; font-weight: 400; margin: 0 6px; }
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 360px; margin: 0 auto; }
+/* The whole date under one foil (scratch: "one"). */
+.cards.one { grid-template-columns: 1fr; max-width: 300px; }
+.cards.one .foil { aspect-ratio: 2 / 1; }
+.cards.one .foil .val { padding: 0 14px; font-size: clamp(24px, 7.4vw, 30px); text-wrap: balance; }
+.card { display: grid; gap: 10px; }
+.foil { position: relative; aspect-ratio: 5 / 6; border-radius: 12px; overflow: hidden; background: linear-gradient(160deg, var(--hi), color-mix(in srgb, var(--paper) 90%, var(--ink))); box-shadow: inset 0 0 0 1px var(--line), inset 0 0 0 4px var(--hi), 0 6px 14px rgba(40, 28, 12, 0.1); padding: 0; border: 0; cursor: grab; touch-action: none; }
+.foil .val { position: absolute; inset: 0; display: grid; place-items: center; font: 500 clamp(28px, 8.5vw, 36px)/1 var(--serif); color: var(--ink); font-variant-numeric: lining-nums; }
+.foil .val.word { font-size: clamp(17px, 5vw, 21px); }
+.foil .val:is(:lang(hi), :lang(mr)) { font-family: var(--deva); }
+.foil canvas { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity 600ms ease; }
+.foil.done { cursor: default; }
+.foil.done canvas { opacity: 0; pointer-events: none; }
+.card .caps { font-size: 11px; letter-spacing: 0.28em; }
+.when-wrap { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 700ms var(--ease-out); }
+.when-wrap.hide { grid-template-rows: 0fr; }
+.when-line { overflow: hidden; margin: 0; padding-top: 22px; font-size: 19px; color: var(--ink); transition: opacity 700ms ease 150ms; }
+.when-wrap.hide .when-line { opacity: 0; }
+.textbtn { margin-top: 6px; padding: 6px 2px; border: 0; background: none; cursor: pointer; font: italic 500 16px/1.3 var(--serif); color: var(--gold-deep); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--gold) 45%, transparent); text-underline-offset: 4px; }
+.textbtn:is(:lang(hi), :lang(mr)) { font: 400 15px/1.4 var(--deva); }
+
+/* The formal invitation */
+.arch-card { --archH: 220px; position: relative; margin: 0 auto; max-width: 380px; }
+.arch-card .arch-top { position: absolute; left: 0; top: 0; overflow: visible; }
+.arch-line { fill: none; stroke: var(--hi); stroke-width: 6; filter: drop-shadow(0 1.5px 1.2px var(--lo)) drop-shadow(0 -1px 0 rgba(255, 255, 255, 0.5)); }
+.arch-gold { fill: none; stroke: var(--gold); stroke-width: 1; opacity: 0.85; }
+.arch-bud { fill: none; stroke: var(--gold); stroke-width: 0.9; }
+.arch-card .pillar { position: absolute; top: calc(var(--archH) - 0.5px); bottom: 0; width: 6px; background: var(--hi); box-shadow: 0 1.5px 1.2px var(--lo), 1px 0 1px var(--lo); }
+.arch-card .pillar::after { content: ""; position: absolute; top: 0; bottom: 13px; width: 1px; background: var(--gold); opacity: 0.85; }
+.arch-card .pillar.l { left: 3px; } .arch-card .pillar.l::after { left: 10px; }
+.arch-card .pillar.r { right: 3px; } .arch-card .pillar.r::after { right: 10px; }
+.arch-card::before { content: ""; position: absolute; left: 13px; right: 13px; bottom: 13px; height: 1px; background: var(--gold); opacity: 0.85; }
+.arch-card::after { content: ""; position: absolute; left: 3px; right: 3px; bottom: 0; height: 6px; background: var(--hi); box-shadow: 0 1.5px 1.2px var(--lo); }
+.arch-in { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; padding: calc(var(--archH) * 0.42) 30px 44px; }
+/* The couple's logo heads the formal invitation and signs off the page. */
+.inv-logo { display: block; width: 92px; height: 92px; object-fit: contain; margin: 0 auto 12px; }
+/* The Story map, whole: its pictures and their captions need room. */
+.inv-logo.whole { width: min(230px, 72%); height: auto; aspect-ratio: 1; }
+.so-logo.whole { width: 210px; height: 210px; }
+.so-logo { display: block; width: 120px; height: 120px; object-fit: contain; margin: 22px auto 0; }
+.om { margin: 0; font: 400 16px/1.4 var(--deva); color: var(--gold-deep); }
+/* A blessing of several lines, each its own line. In English capitals, smaller and spaced, so the longest fits a phone. */
+.om span { display: block; text-wrap: balance; }
+.om.latin { font: 600 12.5px/1.55 var(--serif); letter-spacing: 0.06em; }
+/* Room between the lines, so one that wraps on a phone still reads as one. */
+.om span + span { margin-top: 0.45em; }
+/* A design's blessing painting heads the invitation (Ayodhya's Ram Darbar): whole, never cropped or
+   covered, with its own room above the line under it. */
+.inv-blessing { display: block; width: min(250px, 78%); height: auto; margin: 0 auto 14px; filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.35)); }
+.inv { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; justify-items: center; width: 100%; }
+.inv p { margin: 0; max-width: 100%; overflow-wrap: anywhere; }
+/* A name is one word in a script face: engine.js shrinks it to its line (fitWords) rather than break it. */
+.inv .name { overflow-wrap: normal; white-space: nowrap; }
+.inv .caps { max-width: 30ch; font-size: 12.5px; letter-spacing: 0.15em; line-height: 1.7; }
+.inv-lede { margin: 0 auto 6px; max-width: 24ch; font: italic 400 19px/1.45 var(--serif); color: var(--ink-soft); }
+.inv-lede:is(:lang(hi), :lang(mr)) { font: 400 17px/1.6 var(--deva); }
+.inv .name { font: 400 clamp(52px, 15vw, 64px)/1.1 var(--script); background: var(--foil); -webkit-background-clip: text; background-clip: text; color: transparent; padding: 0.18em 0.24em 0.28em; margin: -0.18em -0.09em -0.28em; }
+.inv .name:is(:lang(hi), :lang(mr)) { font: 400 40px/1.35 var(--deva); }
+/* The first name's tall script capitals reached up into the line above it ("you are invited to the
+   wedding of"), as on the cards (Gautam, 1 November 2026): a little room there only. */
+.inv .inv-lede + .name { margin-top: calc(-0.18em + 8px); }
+.inv .with { font: 400 30px/1 var(--script); color: var(--gold-text, var(--gold)); margin: 6px 0 2px; }
+.inv .with:is(:lang(hi), :lang(mr)) { font: 400 20px/1.4 var(--deva); }
+.inv .parents { font: 500 15px/1.5 var(--serif); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); max-width: 32ch; }
+.inv .parents:is(:lang(hi), :lang(mr)) { font: 400 17px/1.5 var(--deva); letter-spacing: 0; text-transform: none; }
+.inv-when { margin-top: 18px !important; font: 500 17px/1.4 var(--serif); color: var(--ink); }
+.inv-place { font: italic 400 16px/1.4 var(--serif); color: var(--ink-soft); }
+.inv-when:is(:lang(hi), :lang(mr)), .inv-place:is(:lang(hi), :lang(mr)) { font-family: var(--deva); font-style: normal; }
+.inv-follow { margin-top: 16px !important; }
+
+/* Story */
+.dear { margin: 6px 0 6px; font: 400 clamp(26px, 7.6vw, 31px)/1.2 var(--script); color: var(--gold-deep); }
+.dear:is(:lang(hi), :lang(mr)) { font: 400 22px/1.4 var(--deva); }
+.story { margin: 0 auto; max-width: 28ch; font-size: 19px; line-height: 1.5; color: var(--ink); }
+.story:is(:lang(hi), :lang(mr)) { font-size: 17px; line-height: 1.7; }
+.story-line { list-style: none; margin: 26px auto 0; padding: 0; max-width: 340px; display: grid; gap: 18px; text-align: left; border-left: 1px solid var(--line); }
+.story-line li { position: relative; padding-left: 20px; display: grid; }
+.story-line li::before { content: ""; position: absolute; left: -5px; top: 7px; width: 9px; height: 9px; rotate: 45deg; background: var(--paper); border: 1px solid var(--gold); }
+.sl-when { font: 400 24px/1.1 var(--script); color: var(--gold-deep); }
+.sl-when:is(:lang(hi), :lang(mr)) { font: 400 16px/1.4 var(--deva); }
+.sl-what { font-size: 17px; color: var(--ink); }
+
+/* Photos */
+.photos { display: grid; grid-auto-flow: column; grid-auto-columns: 62%; gap: 14px; margin: 4px -24px 0; padding: 6px 24px 18px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.photos::-webkit-scrollbar { display: none; }
+.ph { margin: 0; scroll-snap-align: center; }
+.ph .frame { position: relative; aspect-ratio: 3 / 4.2; padding: 7px; }
+.ph .frame::before { content: ""; position: absolute; inset: 0; background: var(--hi); -webkit-mask: var(--arch) center / 100% 100% no-repeat; mask: var(--arch) center / 100% 100% no-repeat; filter: drop-shadow(0 2px 3px var(--lo)); }
+.ph img { position: relative; width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; -webkit-mask: var(--arch) center / 100% 100% no-repeat; mask: var(--arch) center / 100% 100% no-repeat; }
+.ph figcaption { margin-top: 6px; font: italic 400 16px/1.3 var(--serif); color: var(--ink-soft); }
+.ph figcaption:is(:lang(hi), :lang(mr)) { font: 400 15px/1.4 var(--deva); }
+.swipe { margin: 0; font: italic 400 15px/1.3 var(--serif); color: var(--ink-soft); }
+.swipe:is(:lang(hi), :lang(mr)) { font: 400 14px/1.4 var(--deva); }
+
+/* The celebrations */
+.timeline { position: relative; margin: 18px auto 0; max-width: 400px; }
+.timeline::before { content: ""; position: absolute; left: 50%; top: 8px; bottom: 8px; width: 1px; translate: -50% 0; background: linear-gradient(transparent, var(--gold) 12%, var(--gold) 88%, transparent); }
+.tl { --mood: var(--gold-deep); position: relative; display: grid; grid-template-columns: 1fr 1fr; align-items: center; column-gap: 34px; padding: 18px 0; }
+.tl::after { content: ""; position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; translate: -50% -50%; rotate: 45deg; background: var(--paper); border: 1px solid var(--gold); }
+.tl .art { width: 100%; aspect-ratio: 1; object-fit: contain; border-radius: 6px; }
+.tl .art.glyph { display: grid; place-items: center; color: var(--gold); }
+.tl .art.glyph .orn { width: 70%; }
+.tl .txt { display: grid; gap: 1px; }
+.tl:nth-child(odd) .art { order: 0; }
+.tl:nth-child(odd) .txt { order: 1; text-align: left; justify-items: start; }
+.tl:nth-child(even) .art { order: 1; }
+.tl:nth-child(even) .txt { order: 0; text-align: right; justify-items: end; }
+.tl .caps { font-size: 11.5px; letter-spacing: 0.22em; }
+.tl .time { font: 400 34px/1.1 var(--script); color: var(--mood); }
+.tl .caps + .time { margin-top: 5px; }
+.tl .time:is(:lang(hi), :lang(mr)) { font: 400 20px/1.4 var(--deva); }
+.tl .nm { font: 600 21px/1.2 var(--serif); color: var(--ink); }
+.tl .nm small { display: block; font: 400 15px/1.4 var(--deva); color: var(--gold-deep); }
+.tl .nm:is(:lang(hi), :lang(mr)) { font: 400 20px/1.4 var(--deva); }
+.tl .place { font: italic 400 15.5px/1.35 var(--serif); color: var(--ink-soft); }
+.tl .place:is(:lang(hi), :lang(mr)) { font: 400 14px/1.5 var(--deva); }
+.tl .textbtn { font-size: 14.5px; padding: 4px 0; }
+.tl .textbtn + .textbtn { margin-top: 0; }
+.tl .addr { font: 400 13.5px/1.35 var(--serif); color: var(--ink-soft); }
+.tl .addr:is(:lang(hi), :lang(mr)) { font: 400 13px/1.5 var(--deva); }
+
+/* Countdown */
+.count { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; margin: 4px auto 0; max-width: 360px; }
+.count .u { display: grid; justify-items: center; min-width: 0; }
+.count b { font: 500 clamp(34px, 10.4vw, 48px)/1.05 var(--serif); font-variant-numeric: tabular-nums lining-nums; background: var(--foil); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.count .colon { font: 400 clamp(28px, 8vw, 36px)/1.15 var(--serif); color: var(--gold-text, var(--gold)); }
+.count span { font: 500 14px/1.4 var(--serif); color: var(--ink-soft); letter-spacing: 0.04em; }
+.count span:is(:lang(hi), :lang(mr)) { font: 400 14px/1.5 var(--deva); }
+.count-to { margin: 12px auto 0; color: var(--ink-soft); font: italic 400 17px/1.4 var(--serif); }
+.count-to:is(:lang(hi), :lang(mr)) { font: 400 15px/1.5 var(--deva); }
+
+/* Venue and travel */
+.city { margin: 0; font: 500 26px/1.2 var(--serif); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink); }
+.city:is(:lang(hi), :lang(mr)) { letter-spacing: 0.02em; font: 400 24px/1.4 var(--deva); }
+.venue-name { margin: 6px auto 0; max-width: 24ch; font: 500 20px/1.35 var(--serif); color: var(--ink); }
+.venue-name:is(:lang(hi), :lang(mr)) { font: 400 18px/1.5 var(--deva); }
+.venue-addr { margin: 2px auto 0; max-width: 30ch; color: var(--ink-soft); font-size: 17px; }
+.venue-addr:is(:lang(hi), :lang(mr)) { font-size: 15px; }
+/* A second venue (a reception across town) under the first, each named for its functions. */
+.venue-for { margin: 14px auto 0; color: var(--gold-deep); }
+.venue-also { margin: 34px auto 0; padding-top: 26px; max-width: 360px; border-top: 1px solid var(--line); }
+.venue-also .venue-for { margin-top: 0; }
+.venue-art { margin: 20px -24px 0; width: calc(100% + 48px); max-width: none; }
+/* The couple's own photo of the venue or town takes the painting's place, cut to the same landscape. */
+.venue-art.venue-photo { aspect-ratio: 3 / 2; height: auto; object-fit: cover; }
+.map { position: relative; margin: 22px auto 0; max-width: 360px; aspect-ratio: 4 / 3.2; padding: 7px; background: var(--hi); border-radius: 6px; box-shadow: 0 0 0 1px var(--line), 0 8px 22px rgba(40, 28, 12, 0.12); display: grid; place-items: center; }
+.map iframe { width: 100%; height: 100%; border: 0; border-radius: 3px; filter: sepia(0.18) saturate(0.85); }
+.map-load { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 12px 22px; cursor: pointer; font: italic 500 17px/1 var(--serif); color: var(--gold-deep); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 50px; margin-top: 18px; padding: 0 26px; border: 0; border-radius: 999px; background: var(--foil-deep); background-size: 160% 100%; color: #fffdf6; text-decoration: none; cursor: pointer; font: 600 15px/1 var(--serif); letter-spacing: 0.14em; text-transform: uppercase; text-shadow: 0 1px 1px rgba(60, 40, 10, 0.45); box-shadow: 0 6px 16px rgba(60, 40, 10, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.45); transition: scale 160ms var(--ease-out), background-position 600ms var(--ease-out); }
+.btn:is(:lang(hi), :lang(mr)) { font: 400 16px/1 var(--deva); letter-spacing: 0; text-transform: none; }
+.btn:hover { background-position: 100% 0; }
+.btn:active { scale: 0.97; }
+.btn svg { width: 20px; height: 20px; }
+.travel { margin: 18px auto 0; padding: 0; max-width: 32ch; list-style: none; display: grid; gap: 10px; color: var(--ink-soft); font-size: 17px; }
+.travel b { color: var(--ink); font-weight: 600; }
+.travel:is(:lang(hi), :lang(mr)) { font-size: 15px; line-height: 1.7; }
+
+/* Dress code */
+.dress-art { margin: 14px auto 0; width: 100%; }
+.dress-list { display: grid; margin: 18px auto 0; max-width: 380px; text-align: left; }
+.dress { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 16px; padding: 16px 0; border-top: 1px solid var(--line); }
+.dress:last-child { border-bottom: 1px solid var(--line); }
+.dress .nm { font: 600 19px/1.25 var(--serif); color: var(--ink); }
+.dress .nm small { font: 400 14px/1.4 var(--deva); color: var(--gold-deep); margin-left: 6px; }
+.dress .nm:is(:lang(hi), :lang(mr)) { font: 400 18px/1.4 var(--deva); }
+.dress p { grid-column: 1 / -1; margin: 0; color: var(--ink-soft); font-size: 16.5px; line-height: 1.45; }
+.dress p:is(:lang(hi), :lang(mr)) { font-size: 15px; line-height: 1.6; }
+.dots { display: flex; gap: 6px; }
+.dots i { width: 26px; height: 26px; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.55), 0 0 0 1px var(--line), 0 2px 4px rgba(40, 28, 12, 0.15); }
+
+/* Family */
+.fam-tree { display: grid; gap: 22px; margin: 10px auto 0; max-width: 360px; }
+.fam .caps { margin: 0 0 6px; }
+.fam-name { margin: 7px 0; font: 500 18px/1.45 var(--serif); color: var(--ink); }
+.fam-name:is(:lang(hi), :lang(mr)) { font: 400 17px/1.6 var(--deva); }
+.kids-line { margin: 0; font: italic 400 19px/1.5 var(--serif); color: var(--accent-text, var(--accent)); }
+.kids-line:is(:lang(hi), :lang(mr)) { font: 400 17px/1.6 var(--deva); }
+
+/* Song, voice, contacts, shagun */
+/* The song: a now-playing card, tinted from the design's accent, in a plain sans like a music app's. */
+.song-card { width: min(100%, 300px); margin: 10px auto 0; padding: 16px 16px 14px; border-radius: 18px; text-align: left; color: #fff; background: linear-gradient(170deg, color-mix(in srgb, var(--accent) 62%, #120a08), color-mix(in srgb, var(--accent) 30%, #0a0605)); box-shadow: 0 18px 40px -14px rgba(20, 8, 4, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.sc-cover { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: 10px; background: rgba(0, 0, 0, 0.3); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35); }
+.sc-cover img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; display: block; }
+.sc-cover.video { aspect-ratio: 16 / 9; }
+.sc-disc { position: absolute; inset: 14%; border-radius: 50%; background: radial-gradient(circle, var(--gold) 0 9%, #111 10% 26%, #222 27% 28%, #111 29% 48%, #262626 49% 50%, #0c0c0c 51%); }
+.sc-row { display: flex; align-items: flex-start; gap: 12px; margin-top: 14px; }
+.sc-meta { min-width: 0; flex: 1; }
+.sc-title { margin: 0; font: 700 19px/1.25 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-title:is(:lang(hi), :lang(mr)) { font: 600 19px/1.4 var(--deva); }
+.sc-artist { margin: 3px 0 0; font-size: 14.5px; line-height: 1.3; color: rgba(255, 255, 255, 0.84); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-heart { flex: none; width: 24px; height: 24px; margin-top: 2px; color: color-mix(in srgb, var(--gold) 55%, white); }
+.sc-bar { position: relative; height: 4px; margin-top: 14px; border-radius: 2px; background: rgba(255, 255, 255, 0.24); }
+.sc-bar i { position: absolute; inset: 0 62% 0 0; border-radius: 2px; background: #fff; }
+.sc-bar i::after { content: ""; position: absolute; right: -6px; top: -4px; width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
+.sc-controls { display: flex; align-items: center; justify-content: center; gap: 30px; margin-top: 12px; }
+.sc-controls > svg { width: 26px; height: 26px; color: rgba(255, 255, 255, 0.86); }
+.sc-play { display: grid; place-items: center; width: 58px; height: 58px; padding: 0; border: 0; border-radius: 50%; background: #fff; color: color-mix(in srgb, var(--accent) 50%, #120a08); cursor: pointer; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3); transition: scale 160ms var(--ease-out); }
+.sc-play svg { width: 26px; height: 26px; margin-left: 3px; }
+.sc-play:active { scale: 0.94; }
+.sc-play:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.sc-from { margin: 10px 0 0; font-size: 13px; letter-spacing: 0.04em; color: var(--ink-soft); }
+.song-frame { display: block; width: 100%; height: 100%; border: 0; }
+.song-frame.spotify { height: 80px; margin-top: 12px; border-radius: 12px; }
+audio { width: 100%; max-width: 360px; margin-top: 8px; }
+/* Shagun: the UPI ID, centred under the lede, copied on a tap. */
+.upi-id { display: grid; justify-items: center; gap: 4px; margin: 14px auto 0; padding: 14px 22px 12px; min-width: min(100%, 260px); border: 1px solid var(--line); border-radius: 16px; background: color-mix(in srgb, var(--paper) 70%, white); color: var(--ink); cursor: pointer; font: inherit; transition: scale 160ms var(--ease-out), border-color 200ms ease; }
+.upi-id:active { scale: 0.98; }
+.upi-k { font: 600 11.5px/1.2 var(--serif); letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-soft); }
+.upi-k:is(:lang(hi), :lang(mr)) { font: 400 14px/1.4 var(--deva); letter-spacing: 0; text-transform: none; }
+.upi-v { font: 500 21px/1.3 var(--serif); overflow-wrap: anywhere; user-select: all; }
+.upi-hint { font: italic 400 13.5px/1.3 var(--serif); color: var(--ink-soft); }
+.upi-hint:is(:lang(hi), :lang(mr)) { font: 400 13.5px/1.5 var(--deva); }
+.upi-id.copied { border-color: var(--gold); }
+.contacts { list-style: none; margin: 12px auto 0; padding: 0; max-width: 360px; text-align: left; }
+.contacts li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line); }
+
+/* RSVP */
+.rsvp { display: grid; gap: 10px; max-width: 380px; margin: 22px auto 0; text-align: left; }
+.field-label { font: 500 13px/1.4 var(--serif); letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-soft); }
+.field-label:is(:lang(hi), :lang(mr)) { font: 400 15px/1.5 var(--deva); letter-spacing: 0; text-transform: none; }
+.field { width: 100%; min-height: 50px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--hi); font: 500 19px/1 var(--serif); color: var(--ink); }
+.field:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+.rows { display: grid; margin-top: 8px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.row:last-child { border-bottom: 1px solid var(--line); }
+.row-name { display: grid; }
+.row-name b { font: 600 18px/1.3 var(--serif); color: var(--ink); }
+.row-name b:is(:lang(hi), :lang(mr)) { font: 400 17px/1.4 var(--deva); }
+.row-name span { font: 400 15px/1.3 var(--serif); color: var(--ink-soft); }
+.stepper { display: flex; align-items: center; gap: 4px; }
+.step { display: grid; place-items: center; padding: 0; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--hi); color: var(--gold-deep); cursor: pointer; transition: scale 140ms var(--ease-out); }
+.step:active { scale: 0.94; }
+.step svg { width: 18px; height: 18px; }
+.stepper output { min-width: 30px; text-align: center; font: 500 21px/1 var(--serif); font-variant-numeric: tabular-nums lining-nums; }
+.rsvp .btn { justify-self: center; margin-top: 14px; }
+.rsvp-note { margin: 4px 0 0; text-align: center; font: italic 400 15px/1.45 var(--serif); color: var(--ink-soft); }
+.rsvp-note:is(:lang(hi), :lang(mr)) { font: 400 14px/1.6 var(--deva); }
+.rsvp-note.warn { font-style: normal; color: var(--accent); }
+.rsvp-need { margin: -2px 0 0; font: italic 400 15px/1.4 var(--serif); color: var(--accent); }
+.rsvp-need:is(:lang(hi), :lang(mr)) { font: 400 14px/1.6 var(--deva); }
+.field[aria-invalid="true"] { border-color: var(--accent); }
+/* Once the family has replied, the thank-you takes the form's place until they choose to change it. */
+.rsvp.done > :not(.rsvp-done, .rsvp-note.warn) { display: none; }
+.rsvp:not(.done) > .rsvp-done { display: none; }
+.rsvp-done { text-align: center; }
+.rd-title { margin: 0; font: 400 40px/1.15 var(--script); color: var(--gold-deep); }
+.rd-title:is(:lang(hi), :lang(mr)), .rsvp:is(:lang(hi), :lang(mr)) .rd-title { font: 400 28px/1.4 var(--deva); }
+.rd-line { margin: 2px auto 0; max-width: 28ch; text-wrap: pretty; font: italic 400 19px/1.45 var(--serif); color: var(--ink); }
+.rd-change, .rc-back { min-height: 44px; margin-top: 6px; padding: 0 16px; border: 0; background: none; color: var(--gold-deep); cursor: pointer; font: 600 16px/1 var(--serif); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+:is(.rd-change, .rc-back):is(:lang(hi), :lang(mr)) { font: 400 16px/1.2 var(--deva); }
+.rc-list { list-style: none; margin: 16px 0 0; padding: 0; text-align: left; }
+.rc-list li { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 10px 2px; border-top: 1px solid var(--line); font: 500 18px/1.3 var(--serif); color: var(--ink); }
+.rc-list li:last-child { border-bottom: 1px solid var(--line); }
+.rc-list b { font: 600 21px/1 var(--serif); font-variant-numeric: tabular-nums lining-nums; }
+.rc-list b.no { font: italic 400 16px/1.3 var(--serif); color: var(--ink-soft); }
+.rc-list:is(:lang(hi), :lang(mr)) li, :is(:lang(hi), :lang(mr)) .rc-list li { font: 400 17px/1.4 var(--deva); }
+/* The check before a reply goes: the family, the numbers, and where it's going. */
+.rsvp-confirm { width: min(calc(100vw - 32px), 380px); max-height: calc(100svh - 48px); padding: 0; border: 0; border-radius: 18px; overflow: auto; background: var(--paper-tex) center / 512px auto, var(--paper); color: var(--ink); box-shadow: 0 24px 60px rgba(30, 20, 8, 0.35); }
+.rsvp-confirm::backdrop { background: rgba(20, 12, 6, 0.55); }
+.rsvp-confirm[open] { animation: rc-in 220ms var(--ease-out); }
+@keyframes rc-in { from { opacity: 0; transform: translateY(10px) scale(0.97); } }
+.rc-in { padding: 26px 22px 14px; text-align: center; }
+.rc-title { margin: 0; font: 400 40px/1.15 var(--script); color: var(--gold-deep); }
+.rc-title:is(:lang(hi), :lang(mr)), .rsvp-confirm:is(:lang(hi), :lang(mr)) .rc-title { font: 400 28px/1.4 var(--deva); }
+.rc-from { margin: 4px 0 0; font: 500 13px/1.5 var(--serif); letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-soft); }
+.rsvp-confirm:is(:lang(hi), :lang(mr)) .rc-from { font: 400 15px/1.5 var(--deva); letter-spacing: 0; text-transform: none; }
+.rc-note { margin: 14px auto 0; max-width: 30ch; text-wrap: pretty; font: italic 400 15.5px/1.45 var(--serif); color: var(--ink-soft); }
+.rsvp-confirm:is(:lang(hi), :lang(mr)) .rc-note { font: 400 14.5px/1.65 var(--deva); }
+.rc-actions { display: grid; justify-items: center; }
+.rc-actions .btn { min-width: 60%; }
+@media (prefers-reduced-motion: reduce) { .rsvp-confirm[open] { animation: none; } }
+
+.signoff { padding: 56px 24px calc(56px + var(--safe-b)); text-align: center; }
+.so-text { margin: 0 auto; max-width: 26ch; font: italic 400 19px/1.45 var(--serif); color: var(--ink); }
+.so-text:is(:lang(hi), :lang(mr)) { font: 400 17px/1.6 var(--deva); }
+.so-names { margin: 10px 0 0; font: 400 40px/1.2 var(--script); color: var(--gold-text, var(--gold-deep)); }
+.so-amp { font: italic 400 30px/1 var(--serif); margin: 0 0.06em; }
+.so-names:is(:lang(hi), :lang(mr)) .so-amp { font: 400 20px/1 var(--deva); }
+/* "Invite made with" the Saath mark, at the size of the words, and saath.studio. */
+.made { display: inline-flex; align-items: center; gap: 5px; margin-top: 34px; font: 400 14px/1.4 var(--serif); color: var(--ink-soft); text-decoration: none; letter-spacing: 0.04em; }
+.made img { width: 1.15em; height: 1.15em; margin-left: 2px; }
+.made:hover { color: var(--ink); }
+
+/* Controls */
+.controls { position: fixed; z-index: 10; right: max(14px, (100vw - var(--col)) / 2 + 14px); bottom: calc(16px + var(--safe-b)); display: grid; justify-items: center; gap: 10px; transition: opacity 250ms ease, translate 250ms var(--ease-out); }
+.controls[hidden] { display: none; }
+.controls.away, .controls.tucked { opacity: 0; translate: 0 12px; pointer-events: none; }
+.lang { min-width: 44px; height: 32px; padding: 0 10px; border-radius: 999px; cursor: pointer; border: 1px solid var(--line); background: color-mix(in srgb, var(--paper) 92%, transparent); font: 500 14px/1 var(--serif); color: var(--gold-deep); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.lang:is(:lang(hi), :lang(mr)) { font: 400 15px/1 var(--deva); }
+.sound { width: 52px; height: 52px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center; background: var(--foil); background-size: 200% 100%; background-position: 30% 0; color: #fffdf6; box-shadow: 0 6px 16px rgba(60, 40, 10, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5); transition: scale 160ms var(--ease-out); }
+.sound:active { scale: 0.94; }
+.sound svg { width: 22px; height: 22px; filter: drop-shadow(0 1px 1px rgba(60, 40, 10, 0.4)); }
+.sound .i-pause, .sound[aria-pressed="true"] .i-play { display: none; }
+.sound[aria-pressed="true"] .i-pause { display: block; }
+
+/* Letter-spacing leaves a gap after the last letter; centred spaced capitals take the same space before the first. */
+.greet small { padding-inline-start: 0.22em; }
+.hw-date, .caps { padding-inline-start: 0.2em; }
+.h3 { padding-inline-start: 0.18em; }
+.inv .caps { padding-inline-start: 0.15em; }
+.card .caps { padding-inline-start: 0.28em; }
+.tl:nth-child(odd) .caps { padding-inline-start: 0; }
+.tl:nth-child(even) .caps { padding-inline-start: 0; margin-inline-end: -0.22em; }
+.inv .parents { padding-inline-start: 0.1em; }
+.city { padding-inline-start: 0.16em; }
+.btn span { padding-inline-start: 0.14em; }
+:is(.greet small, .hw-date, .caps, .h3, .inv .parents, .city, .btn span):is(:lang(hi), :lang(mr)) { padding-inline-start: 0; }
+
+/* Lines break where a reader would: no lone last words under centred text. */
+.sec :is(p, h2, h3, li, figcaption), .signoff p, .hero-words p { text-wrap: balance; }
+.tl .txt p, .dress-list p, .story-text { text-wrap: pretty; }
+
+/* Before the map loads, the box shows a drawn street plan rather than an empty frame. */
+.map:not(.loaded) { display: grid; place-items: center; background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 320'%3E%3Cg fill='none' stroke='%23b08d4c' stroke-linecap='round'%3E%3Cpath d='M-10 230 C80 200 120 250 210 210 S330 120 420 150' stroke-width='9' stroke-opacity='.18'/%3E%3Cpath d='M120 -10 C140 80 100 150 150 220 S170 300 160 340' stroke-width='6' stroke-opacity='.16'/%3E%3Cpath d='M-10 90 C90 110 200 60 300 90 S380 70 420 60' stroke-width='3' stroke-opacity='.18'/%3E%3Cpath d='M260 -10 C250 70 300 120 280 200 S300 290 330 340' stroke-width='3' stroke-opacity='.16'/%3E%3Cpath d='M30 -10 L60 340 M-10 300 L420 270 M350 -10 L370 340' stroke-width='1.5' stroke-opacity='.16'/%3E%3C/g%3E%3Cpath d='M300 230c30-16 70-6 90 14v90H250c4-46 20-88 50-104Z' fill='%23b08d4c' fill-opacity='.08'/%3E%3C/svg%3E") center / cover, var(--hi); }
+.map:not(.loaded)::after { content: ""; position: absolute; left: 50%; top: 34%; width: 26px; height: 26px; translate: -50% -50%; rotate: -45deg; border-radius: 50% 50% 50% 0; background: var(--accent); box-shadow: 0 4px 8px rgba(40, 20, 10, 0.25); }
+.map:not(.loaded) .map-load { position: relative; z-index: 1; margin-top: 18%; box-shadow: 0 4px 14px rgba(40, 28, 12, 0.12); }
+
+/* Devanagari is never letter-spaced or set in capitals: spacing pulls conjuncts apart. */
+:is(:lang(hi), :lang(mr)) { letter-spacing: 0 !important; text-transform: none !important; }
+:lang(ta) { font-family: "Noto Serif Tamil", var(--serif); letter-spacing: 0 !important; text-transform: none !important; }
+:lang(bn) { font-family: "Tiro Bangla", var(--serif); letter-spacing: 0 !important; text-transform: none !important; }
+
+/* The recorded video invite shows the page without its controls. */
+body.video .controls, body.video .down { display: none !important; }
+/* Nor the paper fading in at the foot of the first screen, a phone's hint to scroll (a glare in a video). */
+body.video .hero::after { display: none; }
+/* The countdown's "until the Haldi, on …": the functions come one by one in the video, with their
+   dates (the collab bride Dipanwita, 3 November 2026). */
+body.video .count-to { display: none; }
+/* The day, time and place under the scratched date, heavier and in full ink, as on the video's cards. */
+body.video .when-line { font-weight: 600; }
+body.video .when-line:is(:lang(hi), :lang(mr)) { font-weight: 400; }
+body.video .when-line .soft { color: var(--ink); }

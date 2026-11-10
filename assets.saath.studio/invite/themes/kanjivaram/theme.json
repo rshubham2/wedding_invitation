@@ -1,0 +1,202 @@
+{
+  "layout": "keepsake",
+  "id": "kanjivaram",
+  "name": "Kanjivaram",
+  "line": "Your invitation arrives wrapped in rani pink Kanjivaram silk and tied with jasmine. The silk opens like a saree’s fold onto your card.",
+  "story": "Kanjivaram silk is woven in the temple town of Kanchipuram from heavy mulberry silk, its contrast border joined to the body by hand and worked in gold zari: temple borders, mango buttas, the swan called annapakshi. Our invite comes wrapped in a fold of rani pink silk with a jasmine string, the way the muhurtham saree comes to the bride.",
+  "palette": {
+    "ink": "#2B1A12",
+    "paper": "#F6EEDD",
+    "accent": "#A3124A",
+    "accent2": "#E6D3A8",
+    "gold": "#B98A25",
+    "night": "#2E0A1C"
+  },
+  "fonts": {
+    "script": "Corinthia",
+    "serif": "Cormorant Garamond",
+    "deva": "Tiro Devanagari Hindi",
+    "display": "Playfair Display"
+  },
+  "moods": {
+    "haldi": {
+      "accent": "#C9900F",
+      "paper": "#F8EFD6"
+    },
+    "mehendi": {
+      "accent": "#2E6B4E",
+      "paper": "#EEF1E4"
+    },
+    "sangeet": {
+      "accent": "#6A1F6E",
+      "paper": "#F2E9EE"
+    },
+    "wedding": {
+      "accent": "#A3124A",
+      "paper": "#F7EADF"
+    },
+    "reception": {
+      "accent": "#0F5E5A",
+      "paper": "#EAF0EC"
+    }
+  },
+  "opening": {
+    "type": "keepsake",
+    "gesture": "jasmine",
+    "film": "opening.mp4",
+    "first": "opening-first.webp",
+    "last": "opening-last.webp",
+    "aspect": "9 / 16",
+    "focus": [
+      0.07,
+      0.2,
+      0.92,
+      0.83
+    ],
+    "tap": [
+      0.08,
+      0.22,
+      0.92,
+      0.81
+    ],
+    "from": 0.6,
+    "rate": 1.1,
+    "writeAt": 3.55,
+    "names": {
+      "left": 0.265,
+      "top": 0.375,
+      "right": 0.715,
+      "bottom": 0.695
+    },
+    "tone": "dark",
+    "hint": {
+      "en": "Tap the jasmine to open",
+      "hi": "खोलने के लिए मोगरे को छुएँ",
+      "mr": "उघडण्यासाठी मोगरा दाबा"
+    },
+    "filmNote": "Made once in Google Flow (experiments/collections/2026-10-31-next-films, runs/flow/generations.json): Nano Banana keyframes kanjivaram-k0-a (the silk parcel tied with jasmine) and kanjivaram-k1-c (the silk opened, the blank card centred), and a Veo 3.1 Fast clip between them. The clip is cut at 3.9 s, before Veo dropped loose jasmine buds in from the top, settled onto the first keyframe and cropped to the centred 9:16 window clear of Flow's marks (x 0.07 to 0.93, y 0.045 to 0.905). The last frame is the film's own. Positions are fractions of the cropped frame.",
+    "edge": {
+      "top": "#f0dbbd",
+      "bottom": "#dec09c"
+    }
+  },
+  "art": {
+    "closed": "closed.webp",
+    "hero": "hero.webp",
+    "paper": "paper.webp",
+    "frame": "frame.webp",
+    "divider": "divider.webp",
+    "corner": "corner.webp",
+    "motif": "motif.webp",
+    "frameZone": {
+      "top": 0.1,
+      "bottom": 0.895,
+      "left": 0.15,
+      "right": 0.85
+    },
+    "heroCouple": null,
+    "cardHero": {
+      "file": "closed.webp",
+      "focus": [
+        0.5,
+        0.5
+      ]
+    },
+    "fn": {
+      "haldi": "fn-haldi.webp",
+      "mehendi": "fn-mehendi.webp",
+      "sangeet": "fn-sangeet.webp",
+      "wedding": "fn-wedding.webp",
+      "reception": "fn-reception.webp",
+      "engagement": "fn-engagement.webp"
+    },
+    "venue": "venue.webp",
+    "dress": "dress.webp",
+    "scenes": {
+      "invite": {
+        "file": "scene-invite.webp",
+        "corners": [
+          [
+            0.1768,
+            0.0958
+          ],
+          [
+            0.5304,
+            0.092
+          ],
+          [
+            0.5331,
+            0.8812
+          ],
+          [
+            0.1741,
+            0.8844
+          ]
+        ]
+      },
+      "welcome": {
+        "file": "scene-welcome.webp",
+        "corners": [
+          [
+            0.1979,
+            0.3001
+          ],
+          [
+            0.827,
+            0.3001
+          ],
+          [
+            0.8374,
+            0.5869
+          ],
+          [
+            0.1828,
+            0.585
+          ]
+        ]
+      },
+      "table": {
+        "file": "scene-table.webp",
+        "corners": [
+          [
+            0.729,
+            0.3619
+          ],
+          [
+            0.8883,
+            0.3658
+          ],
+          [
+            0.9005,
+            0.8223
+          ],
+          [
+            0.7295,
+            0.8213
+          ]
+        ]
+      },
+      "favour": {
+        "file": "scene-favour.webp",
+        "corners": [
+          [
+            0.1967,
+            0.3235
+          ],
+          [
+            0.5934,
+            0.3218
+          ],
+          [
+            0.5957,
+            0.5459
+          ],
+          [
+            0.195,
+            0.5459
+          ]
+        ]
+      }
+    }
+  }
+}
