@@ -765,6 +765,8 @@
     if (opened) return;
     opened = true;
     if (!instant && !params.has("play")) startMusic();
+    const song = $("#songAudio");
+    if (song) song.play().then(() => { if (song.dataset.live === "1") return; song.pause(); song.currentTime = 0; }).catch(() => {});
     const gate = $("#gate");
     gate.classList.add("opening");
     const finish = () => {
@@ -1007,7 +1009,7 @@
     { id: "travel", when: () => full() && (has(data.travel) || has(data.stay)), html: secTravel },
     { id: "dress", when: () => full() && events().some((e) => has(e.dress) || has(e.palette)), html: secDress },
     { id: "family", when: () => full() && (["blessings", "darshanabhilashi", "swagatotsuk", "kids"].some((k) => famList(k).length) || !!own("kidsLine")), html: secFamily },
-    { id: "song", when: () => !!data.song?.url, html: secSong },
+    { id: "song", when: () => !!(data.song?.file || data.song?.url), html: secSong },
     { id: "voice", when: () => !!data.voice, html: secVoice },
     { id: "rsvp", when: () => full() && data.rsvp !== false && events().length > 0 && !afterWedding(), html: secRsvp },
     { id: "contacts", when: () => full() && (data.contacts || []).some((c) => c.phone), html: secContacts },
@@ -1251,16 +1253,22 @@
   function secSong() {
     const u = t();
     const s = data.song;
-    const from = /spotify\.com/.test(s.url) ? "Spotify" : /youtu/.test(s.url) ? "YouTube" : "";
     const cover = s.cover || (data.photos?.[0] && media(data.photos[0].src)) || "";
     const title = pick(s.title) || u.songT;
-    return sec("song", u.songT, `
-      <div class="song-card reveal" id="songBox">
-        <div class="sc-cover" id="songCover"${s.cover ? "" : ` data-clarity-mask="true"`}>${cover ? `<img src="${esc(cover)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : `<span class="sc-disc" aria-hidden="true"></span>`}</div>
+    const art = `<div class="sc-cover" id="songCover"${s.cover ? "" : ` data-clarity-mask="true"`}>${cover ? `<img src="${esc(cover)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : `<span class="sc-disc" aria-hidden="true"></span>`}</div>
         <div class="sc-row">
           <div class="sc-meta"><p class="sc-title" lang="${lang}">${esc(title)}</p>${s.artist ? `<p class="sc-artist">${esc(s.artist)}</p>` : ""}</div>
           <svg class="sc-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.3 4.6 13a4.7 4.7 0 0 1 6.6-6.7l.8.8.8-.8a4.7 4.7 0 0 1 6.6 6.7Z" fill="currentColor"/></svg>
-        </div>
+        </div>`;
+    if (s.file) return sec("song", u.songT, `
+      <div class="song-card reveal" id="songBox">
+        ${art}
+        <audio id="songAudio" preload="auto" src="${esc(s.file)}"></audio>
+      </div>`);
+    const from = /spotify\.com/.test(s.url) ? "Spotify" : /youtu/.test(s.url) ? "YouTube" : "";
+    return sec("song", u.songT, `
+      <div class="song-card reveal" id="songBox">
+        ${art}
         <div class="sc-player" id="songPlayer">
           <div class="sc-bar" aria-hidden="true"><i></i></div>
           <div class="sc-controls">
@@ -1376,7 +1384,7 @@
     const rows = $("#rsvpForm .rows");
     if (rows) new IntersectionObserver(([e]) => $("#controls").classList.toggle("away", e.isIntersecting), { rootMargin: "0px 0px -90px 0px" }).observe(rows);
     $(".map-load")?.addEventListener("click", loadMap);
-    $("#songLoad")?.addEventListener("click", loadSong);
+    $("#songAudio") ? watchSong() : $("#songLoad")?.addEventListener("click", loadSong);
     $("#upiCopy")?.addEventListener("click", (ev) => copyUpi(ev.currentTarget, t()));
     LAY?.decorate?.($("#paper"), api());
     watchReveals();
@@ -1408,6 +1416,35 @@
     try { q = new URL(data.venue.map).searchParams.get("query") || q; } catch {}
     $("#mapBox").classList.add("loaded");
     $("#mapBox").innerHTML = `<iframe title="${esc(t().mapTitle(pick(data.venue.name)))}" src="https://maps.google.com/maps?q=${encodeURIComponent(q)}&z=14&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`;
+  }
+  function watchSong() {
+    const box = $("#songBox");
+    const song = $("#songAudio");
+    if (!box || !song) return;
+    const bg = $("#music");
+    let bgWasOn = false, shown = false;
+    new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        shown = true;
+        song.dataset.live = "1";
+        const bgOn = !!(bg && !bg.paused);
+        song.play().then(() => {
+          if (song.dataset.live !== "1") { song.pause(); song.currentTime = 0; return; }
+          bgWasOn = bgOn;
+          if (bgOn) { bg.pause(); setSound(false); }
+          box.classList.add("is-playing");
+        }).catch(() => {});
+        return;
+      }
+      const wasPlaying = shown && (!song.paused || song.dataset.live === "1");
+      shown = false;
+      song.dataset.live = "";
+      song.pause();
+      try { song.currentTime = 0; } catch {}
+      box.classList.remove("is-playing");
+      if (wasPlaying && bgWasOn) startMusic();
+      bgWasOn = false;
+    }, { threshold: 0.45 }).observe(box);
   }
   function loadSong() {
     const url = data.song.url;
