@@ -343,6 +343,36 @@ body.dark .hw-name { filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.6)); }
 .arch-card .pillar.r { right: 3px; } .arch-card .pillar.r::after { right: 10px; }
 .arch-card::before { content: ""; position: absolute; left: 13px; right: 13px; bottom: 13px; height: 1px; background: var(--gold); opacity: 0.85; }
 .arch-card::after { content: ""; position: absolute; left: 3px; right: 3px; bottom: 0; height: 6px; background: var(--hi); box-shadow: 0 1.5px 1.2px var(--lo); }
+/* A painted arch replaces the drawn arch and the two pillars. The scallop stays in proportion; the sides stretch with the card. */
+.arch-card.framed { container-type: inline-size; max-width: none; width: 100%; }
+#invitation.sec { padding-top: 28px; padding-left: 0; padding-right: 0; }
+.arch-card.framed .arch-in { padding: calc(100cqi * 248 / 958) calc(100cqi * 148 / 958) calc(100cqi * 175 / 958); }
+.layout-keepsake .arch-card.framed .inv-logo { width: 136px; height: 136px; margin: 0 auto 4px; }
+.arch-card.framed .inv { gap: 0; justify-items: center; text-align: center; }
+.arch-card.framed .inv-lede { margin: 0 auto 12px; }
+.arch-card.framed .inv .name,
+.arch-card.framed .inv .inv-lede + .name { margin: 0; }
+.arch-card.framed .inv .with { margin: 0; padding: 2px 0 6px; font: italic 400 36px/1 var(--serif); letter-spacing: 0; color: var(--gold-text, var(--gold)); }
+.arch-card.framed .inv-when { margin-top: 16px !important; }
+.arch-card.framed .inv-place { margin-top: 6px; }
+.arch-card.framed::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  height: auto;
+  background: none;
+  box-shadow: none;
+  opacity: 1;
+  pointer-events: none;
+  border-style: solid;
+  border-color: transparent;
+  border-width: calc(100cqi * 640 / 958) calc(100cqi * 150 / 958) calc(100cqi * 170 / 958);
+  border-image-source: var(--arch-frame);
+  border-image-slice: 640 150 160 150 fill;
+  border-image-repeat: stretch;
+}
+.arch-card.framed::after { content: none; }
 .arch-in { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; padding: calc(var(--archH) * 0.42) 30px 44px; }
 /* The couple's logo heads the formal invitation and signs off the page. */
 .inv-logo { display: block; width: 92px; height: 92px; object-fit: contain; margin: 0 auto 12px; }
@@ -438,6 +468,15 @@ body.dark .hw-name { filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.6)); }
 .count .colon { font: 400 clamp(28px, 8vw, 36px)/1.15 var(--serif); color: var(--gold-text, var(--gold)); }
 .count span { font: 500 14px/1.4 var(--serif); color: var(--ink-soft); letter-spacing: 0.04em; }
 .count span:is(:lang(hi), :lang(mr)) { font: 400 14px/1.5 var(--deva); }
+/* A middle size: large enough to hold the number, with paper still showing between scallops. */
+.count.roses { align-items: center; grid-template-columns: repeat(4, minmax(0, 96px)); justify-content: center; column-gap: 12px; width: calc(100% + 20px); max-width: none; margin: 8px -10px 0; }
+.count.roses .u { position: relative; aspect-ratio: 1; place-content: center; align-content: center; width: 100%; }
+.count.roses .u::before { content: ""; position: absolute; inset: 0; background: var(--count-rose) center / contain no-repeat; pointer-events: none; }
+.count.roses .u > * { position: relative; z-index: 1; }
+.count.roses b { font-size: clamp(20px, 5.6vw, 26px); }
+.count.roses .colon { display: none; }
+.count.roses span,
+.count.roses span:is(:lang(hi), :lang(mr)) { font-size: 12px; line-height: 1.15; letter-spacing: 0.01em; }
 .count-to { margin: 12px auto 0; color: var(--ink-soft); font: italic 400 17px/1.4 var(--serif); }
 .count-to:is(:lang(hi), :lang(mr)) { font: 400 15px/1.5 var(--deva); }
 
@@ -453,6 +492,17 @@ body.dark .hw-name { filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.6)); }
 .venue-also { margin: 34px auto 0; padding-top: 26px; max-width: 360px; border-top: 1px solid var(--line); }
 .venue-also .venue-for { margin-top: 0; }
 .venue-art { margin: 20px -24px 0; width: calc(100% + 48px); max-width: none; }
+/* The painted venue leaves a green field at the top for the place. */
+.venue-plate { position: relative; margin: 16px -24px 0; width: calc(100% + 48px); container-type: inline-size; }
+.venue-plate .venue-art { display: block; width: 100%; height: auto; margin: 0; }
+.venue-on { position: absolute; left: 4%; right: 4%; top: 1.4%; height: 17.2%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0.9cqi; text-align: center; pointer-events: none; }
+.venue-on .city,
+.venue-on .venue-name,
+.venue-on .venue-addr { color: #f3e8d5; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28); margin: 0; }
+.venue-on .city { font-size: clamp(26px, 7cqi, 34px); letter-spacing: 0.16em; }
+.venue-on .venue-name { max-width: none; white-space: nowrap; font-size: clamp(18px, 5.2cqi, 25px); line-height: 1.15; }
+.venue-on .venue-name:is(:lang(hi), :lang(mr)) { white-space: normal; font-size: clamp(16px, 4.6cqi, 22px); }
+.venue-on .venue-addr { max-width: 32ch; font-size: clamp(14px, 3.8cqi, 18px); line-height: 1.35; color: #efe2cc; }
 /* The couple's own photo of the venue or town takes the painting's place, cut to the same landscape. */
 .venue-art.venue-photo { aspect-ratio: 3 / 2; height: auto; object-fit: cover; }
 .map { position: relative; margin: 22px auto 0; max-width: 360px; aspect-ratio: 4 / 3.2; padding: 7px; background: var(--hi); border-radius: 6px; box-shadow: 0 0 0 1px var(--line), 0 8px 22px rgba(40, 28, 12, 0.12); display: grid; place-items: center; }
@@ -645,6 +695,14 @@ audio { width: 100%; max-width: 360px; margin-top: 8px; }
   filter: drop-shadow(0 3px 3px rgba(40, 20, 10, 0.32));
 }
 .map:not(.loaded) .map-load { position: relative; z-index: 1; margin-top: 18%; box-shadow: 0 4px 14px rgba(40, 28, 12, 0.12); }
+/* The illustrated card is the button. A tap replaces it with the live map. */
+.map.map-card { max-width: 400px; aspect-ratio: auto; padding: 0; background: none; border-radius: 0; box-shadow: none; }
+.map.map-card:not(.loaded) { background: none; }
+.map.map-card:not(.loaded)::after { content: none; }
+.map.map-card .map-load { width: 100%; margin: 0; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; line-height: 0; cursor: pointer; }
+.map.map-card .map-load img { width: 100%; height: auto; display: block; }
+.map.map-card .map-load:active { scale: 0.985; }
+.map.map-card.loaded { aspect-ratio: 1542 / 1209; padding: 7px; background: var(--hi); border-radius: 6px; box-shadow: 0 0 0 1px var(--line), 0 8px 22px rgba(40, 28, 12, 0.12); }
 
 /* Devanagari is never letter-spaced or set in capitals: spacing pulls conjuncts apart. */
 :is(:lang(hi), :lang(mr)) { letter-spacing: 0 !important; text-transform: none !important; }

@@ -115,8 +115,11 @@
       "reception": "wedding_mandap_transparent.png",
       "engagement": "fn-engagement.webp"
     },
-    "venue": "Watercolour Retreat with Lotus Arch.png",
+    "venue": "venue-card.jpg",
+    "showMap": "MAp.png",
     "mapsBadge": "Ornate Open in Google Maps Badge.png",
+    "rosette": "Peach Watercolour Scalloped Rosette.png",
+    "archFrame": "Gold Arch on Forest Green.png",
     "dress": "dress.webp",
     "scenes": {
       "invite": {

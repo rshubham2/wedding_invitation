@@ -42,7 +42,7 @@
       whenLine: (wd, time) => `${wd}, at ${time}`, addCal: "Add to calendar",
       blessing: "With the blessings of our elders, you are invited to the wedding of",
       ownVoice: "Together with our families, we invite you to our wedding",
-      daughter: "Daughter of", son: "Son of", with: "with", close: "",
+      daughter: "Daughter of", son: "Son of", with: "&", close: "",
       dearAll: "Dear friends and family",
       storyT: "Our story", photosT: "Us, so far", swipe: "Swipe to see more",
       eventsT: "The celebrations",
@@ -89,7 +89,7 @@
       whenLine: (wd, time) => `${wd}, ${time}`, addCal: "कॅलेंडरमध्ये जोडा",
       blessing: "मोठ्यांच्या आशीर्वादाने, आपण यांच्या लग्नाला आमंत्रित आहात",
       ownVoice: "आमच्या कुटुंबांसह, आम्ही तुम्हाला आमच्या लग्नाला आमंत्रित करतो",
-      daughter: "यांच्या कन्या", son: "यांचा पुत्र", with: "यांचे", close: "",
+      daughter: "यांच्या कन्या", son: "यांचा पुत्र", with: "&", close: "",
       dearAll: "प्रिय नातेवाईक आणि मित्र",
       storyT: "आमची गोष्ट", photosT: "आतापर्यंत", swipe: "अजून पाहण्यासाठी सरका",
       eventsT: "समारंभ",
@@ -419,11 +419,11 @@
     if (SAATH.draft || params.has("draft")) { try { draft = JSON.parse(localStorage.getItem("saath-draft") || "null"); } catch {} }
     data = tidy(draft || SAATH.data || (await (await fetch(`${ROOT}couples/${slug}/invite.json`)).json()));
     let themeId = (params.get("t") || data.theme || "jharokha").replace(/[^a-z0-9-]/gi, "");
-    let res = await fetch(`${ROOT}themes/${themeId}/theme.json?v=6`);
+    let res = await fetch(`${ROOT}themes/${themeId}/theme.json?v=10`);
     // A collection that isn't built yet falls back to the first one that is.
     if (!res.ok) {
       try { themeId = (await (await fetch(`${ROOT}themes/index.json`)).json())[0].id; } catch { themeId = "jharokha"; }
-      res = await fetch(`${ROOT}themes/${themeId}/theme.json?v=6`);
+      res = await fetch(`${ROOT}themes/${themeId}/theme.json?v=10`);
     }
     base = `${ROOT}themes/${themeId}/`;
     theme = await res.json();
@@ -537,6 +537,8 @@
     if (luminance(p.paper || "#fbf8f2") < 0.35) document.body.classList.add("dark");
     setFoils(p.gold || "#b08d4c", p.paper || "#fbf8f2", p.accent || "#a3122f");
     if (art("paper")) r.setProperty("--paper-tex", `url("${art("paper")}")`);
+    if (art("rosette")) r.setProperty("--count-rose", `url("${art("rosette")}")`);
+    if (art("archFrame")) r.setProperty("--arch-frame", `url("${art("archFrame")}")`);
     // The couple's own song (kept with their photos), a track from the music library, or the design's
     // own, on a loop. "off": no music and no button.
     if (data.music === "off") $("#soundBtn").style.display = "none";
@@ -1096,19 +1098,18 @@
     // the deity heads a printed card: still, whole, above every word, until the couple turns it off.
     const blessing = data.blessing === false ? null : art("blessing");
     const line = invocation ? `<p class="${omClass(invocation)}" dir="auto"${/[ঀ-৿]/.test(invocation) ? ' lang="bn"' : ""}>${omLines(invocation)}</p><div class="sec-orn small">${divider()}</div>` : "";
+    const frame = art("archFrame");
     return `<section class="sec" id="invitation">
-      <div class="arch-card reveal" id="archCard">
-        <svg class="arch-top" id="archTop" aria-hidden="true"></svg>
-        <i class="pillar l" aria-hidden="true"></i><i class="pillar r" aria-hidden="true"></i>
+      <div class="arch-card reveal${frame ? " framed" : ""}" id="archCard">
+        ${frame ? "" : `<svg class="arch-top" id="archTop" aria-hidden="true"></svg>
+        <i class="pillar l" aria-hidden="true"></i><i class="pillar r" aria-hidden="true"></i>`}
         <div class="arch-in">
           ${blessing ? `<img class="inv-blessing" src="${blessing}" alt="" decoding="async">${line}${logoMark("inv-logo")}` : `${logoMark("inv-logo")}${line}`}
           <div class="inv">
             <p class="inv-lede" lang="${lang}">${esc(parents ? u.blessing : u.ownVoice)}</p>
             ${two(
-              `<p class="name" lang="${lang}">${esc(nm(data.her))}</p>
-            ${has(data.parents?.her) ? `<p class="caps" lang="${lang}" style="margin-top:4px">${esc(u.daughter)}</p><p class="parents" lang="${lang}">${esc(nb(pick(data.parents.her)))}</p>` : ""}`,
-              `<p class="name" lang="${lang}">${esc(nm(data.him))}</p>
-            ${has(data.parents?.him) ? `<p class="caps" lang="${lang}" style="margin-top:4px">${esc(u.son)}</p><p class="parents" lang="${lang}">${esc(nb(pick(data.parents.him)))}</p>` : ""}`,
+              `<p class="name" lang="${lang}">${esc(nm(data.her))}</p>`,
+              `<p class="name" lang="${lang}">${esc(nm(data.him))}</p>`,
             ).join(`
             <p class="with" lang="${lang}">${esc(u.with)}</p>
             `)}
@@ -1180,7 +1181,7 @@
 
   function secCountdown() {
     return sec("countdown", t().countT, `
-      <div class="count reveal" id="count" role="timer" aria-live="off"></div>
+      <div class="count reveal${art("rosette") ? " roses" : ""}" id="count" role="timer" aria-live="off"></div>
       <p class="count-to reveal" id="countTo" lang="${lang}"></p>`);
   }
 
@@ -1198,14 +1199,17 @@
     const places = [];
     for (const e of away) { const p = places.find((x) => x.key === placeOf(e)); if (p) p.evs.push(e); else places.push({ key: placeOf(e), evs: [e] }); }
     const main = has(data.venue.name) || has(data.venue.address);
+    const onCard = !data.venue.photo && art("venue");
+    const place = `
+      ${has(data.city) ? `<p class="city${onCard ? "" : " reveal"}" lang="${lang}">${esc(pick(data.city))}</p>` : ""}
+      ${has(data.venue.name) ? `<p class="venue-name${onCard ? "" : " reveal"}" lang="${lang}">${esc(pick(data.venue.name))}</p>` : ""}
+      ${has(data.venue.address) ? `<p class="venue-addr${onCard ? "" : " reveal"}" lang="${lang}">${esc(pick(data.venue.address))}</p>` : ""}`;
     return sec("venue", u.venueT, `
-      ${has(data.city) ? `<p class="city reveal" lang="${lang}">${esc(pick(data.city))}</p>` : ""}
       ${here && main ? `<p class="caps venue-for reveal" lang="${lang}">${esc(here)}</p>` : ""}
-      ${has(data.venue.name) ? `<p class="venue-name reveal" lang="${lang}">${esc(pick(data.venue.name))}</p>` : ""}
-      ${has(data.venue.address) ? `<p class="venue-addr reveal" lang="${lang}">${esc(pick(data.venue.address))}</p>` : ""}
+      ${onCard ? "" : place}
       ${data.venue.photo ? `<img class="venue-art venue-photo reveal" src="${esc(media(data.venue.photo))}" alt="" loading="lazy" decoding="async" data-clarity-mask="true">`
-        : art("venue") ? `<img class="venue-art reveal" src="${art("venue")}" alt="" loading="lazy" decoding="async">` : ""}
-      ${data.venue.map ? `<div class="map reveal" id="mapBox"><button class="map-load" type="button" lang="${lang}">${esc(u.showMap)}</button></div>
+        : onCard ? `<div class="venue-plate reveal"><img class="venue-art" src="${art("venue")}" alt="" loading="lazy" decoding="async"><div class="venue-on">${place}</div></div>` : ""}
+      ${data.venue.map ? `<div class="map reveal${art("showMap") ? " map-card" : ""}" id="mapBox">${art("showMap") ? `<button class="map-load" type="button" aria-label="${esc(u.showMap)}"><img src="${esc(art("showMap"))}" alt="${esc(u.showMap)}"></button>` : `<button class="map-load" type="button" lang="${lang}">${esc(u.showMap)}</button>`}</div>
       ${art("mapsBadge") ? `<a class="maps-badge" href="${esc(data.venue.map)}" target="_blank" rel="noopener"><img src="${esc(art("mapsBadge"))}" alt="${esc(u.maps)}"></a>` : `<a class="btn" href="${esc(data.venue.map)}" target="_blank" rel="noopener" lang="${lang}">${esc(u.maps)}</a>`}` : ""}
       ${places.map(({ evs: [e, ...more] }) => { const map = [e, ...more].map(mapOf).find(Boolean); return `<div class="venue-also reveal">
         <p class="caps venue-for" lang="${lang}">${esc(andList([e, ...more].map((x) => pick(x.name))))}</p>
