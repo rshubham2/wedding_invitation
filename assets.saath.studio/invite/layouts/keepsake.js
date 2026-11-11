@@ -50,6 +50,7 @@
 
   // ───────── The words on the card ─────────
   function wordsHTML(a) {
+    if (a.theme.opening?.words === false) return "";
     const { data, esc, u, lang, two, divider, fmt, mainDate, pick } = a;
     const [n1, n2] = lang === "mr" ? two(data.her.mr || data.her.hi || data.her.en, data.him.mr || data.him.hi || data.him.en) : two(data.her.en, data.him.en);
     // The video invite keeps the date back for its scratch, right after (engine.js heroDate).
@@ -99,6 +100,7 @@
   }
 
   function placeWords(words, o) {
+    if (!words) return;
     const n = o.names || { left: 0.25, top: 0.32, right: 0.75, bottom: 0.68 };
     Object.assign(words.style, { left: pct(n.left), top: pct(n.top), width: pct(n.right - n.left), height: pct(n.bottom - n.top) });
   }
@@ -257,6 +259,7 @@
         <div class="ks-glints" aria-hidden="true"></div>
         ${o.fireworks ? `<canvas class="ks-fw" aria-hidden="true"></canvas>` : ""}
         ${wordsHTML(a)}
+        <p class="op-green-names drawn" aria-label="Akshay &amp; Pratiksha">${typeof saathHandNames === "function" ? saathHandNames("hero") : ""}</p>
       </div>
     </div>`;
   }
@@ -292,7 +295,7 @@
     document.fonts?.ready.then(fit);
     watchFit(words, () => fitWords(words));
     // A page opened at once (the site's previews) writes the names in as the page appears.
-    if (params.has("open") && !quiet()) words.classList.add("ks-write");
+    if (words && params.has("open") && !quiet()) words.classList.add("ks-write");
     // The living hero: only once the invitation is open, while it's on screen, and never in the
     // editor, on Save-Data, with reduced motion or in a grid of the site's previews (?top).
     const v = box.querySelector(".ks-loop");
@@ -384,6 +387,18 @@
     end.src = base + (o.last || theme.art.hero); end.alt = "";
     const first = el("img", "op-still", box);
     first.crossOrigin = "anonymous"; first.src = base + (o.first || theme.art.closed); first.alt = "";
+    // The pen starts at 7s of the film (10.08s) so the last stroke lands as the picture ends.
+    const caption = el("p", "op-green-names", box);
+    caption.setAttribute("aria-label", "Akshay & Pratiksha");
+    caption.innerHTML = typeof saathHandNames === "function" ? saathHandNames("gate") : "";
+    const PEN = 3400;
+    const PEN_AT = 7;
+    let penStarted = 0;
+    const showNames = () => {
+      if (penStarted) return;
+      penStarted = performance.now();
+      caption.classList.add(reduced ? "drawn" : "on");
+    };
     const sky = o.fireworks && !reduced && !still() ? fireworks(el("canvas", "ks-fw", box), o.fireworks) : null;
     let lowOn = false;
     // The words that will be written onto the card: the first screen's own, in the same place.
@@ -443,7 +458,7 @@
         btn.remove();
         if (reduced) {
           sealBtn?.classList.add("gone");
-          end.classList.add("on"); first.classList.add("gone");
+          end.classList.add("on"); first.classList.add("gone"); showNames();
           words?.classList.replace("ks-later", "ks-shown");
           await wait(600);
           return;
@@ -460,15 +475,24 @@
         // seconds into the film), while the last folds settle, or at the end.
         let wrote = 0;
         const write = () => { if (wrote || !words) return; wrote = performance.now(); fitWords(words); words.classList.replace("ks-later", "ks-write"); };
-        if (!running) { end.classList.add("on"); first.classList.add("gone"); await wait(700); }
+        if (!running) { end.classList.add("on"); first.classList.add("gone"); showNames(); await wait(reduced ? 400 : PEN + 400); }
         else {
           first.classList.add("gone");
           await new Promise((done) => {
             let over = false;
-            const stop = () => { if (over) return; over = true; v.pause(); end.classList.add("on"); done(); };
+            const stop = () => {
+              if (over) return;
+              over = true;
+              v.pause();
+              end.classList.add("on");
+              showNames();
+              const left = reduced ? 400 : Math.max(0, PEN - (performance.now() - penStarted)) + 400;
+              setTimeout(done, left);
+            };
             const to = o.to || 0;
             const tick = () => {
               if (over) return;
+              if (v.currentTime >= PEN_AT) showNames();
               if (o.writeAt && v.currentTime >= o.writeAt) write();
               if (sky) {
                 sky.at(v.currentTime, (o.writeAt || 99) - 0.8);

@@ -419,11 +419,11 @@
     if (SAATH.draft || params.has("draft")) { try { draft = JSON.parse(localStorage.getItem("saath-draft") || "null"); } catch {} }
     data = tidy(draft || SAATH.data || (await (await fetch(`${ROOT}couples/${slug}/invite.json`)).json()));
     let themeId = (params.get("t") || data.theme || "jharokha").replace(/[^a-z0-9-]/gi, "");
-    let res = await fetch(`${ROOT}themes/${themeId}/theme.json`);
+    let res = await fetch(`${ROOT}themes/${themeId}/theme.json?v=5`);
     // A collection that isn't built yet falls back to the first one that is.
     if (!res.ok) {
       try { themeId = (await (await fetch(`${ROOT}themes/index.json`)).json())[0].id; } catch { themeId = "jharokha"; }
-      res = await fetch(`${ROOT}themes/${themeId}/theme.json`);
+      res = await fetch(`${ROOT}themes/${themeId}/theme.json?v=5`);
     }
     base = `${ROOT}themes/${themeId}/`;
     theme = await res.json();
@@ -540,7 +540,7 @@
     // The couple's own song (kept with their photos), a track from the music library, or the design's
     // own, on a loop. "off": no music and no button.
     if (data.music === "off") $("#soundBtn").style.display = "none";
-    else $("#music").src = /^\/api\/wedding\/media\/[0-9a-f-]{36}$/.test(data.music || "") ? data.music : /^music\/[a-z0-9-]+\.mp3$/.test(data.music || "") ? ROOT + data.music : theme.music ? base + theme.music : `${ROOT}themes/theme.mp3`;
+    else $("#music").src = /^\/api\/wedding\/media\/[0-9a-f-]{36}$/.test(data.music || "") ? data.music : /^music\/[a-z0-9-]+\.mp3$/.test(data.music || "") ? ROOT + data.music : theme.music ? base + encodeURI(theme.music) : `${ROOT}themes/theme.mp3`;
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.content = p.night || p.paper || "#ebe3d5";
   }
@@ -610,9 +610,12 @@
   function renderGate() {
     const u = t();
     if (theme.opening?.edge) $("#gate").dataset.edge = "";
+    const sub = theme.opening?.cityLine === false
+      ? ({ en: "to a wedding", hi: "शादी के लिए", mr: "लग्नासाठी" }[lang] || "to a wedding")
+      : (has(data.city) ? u.invitedSub(pick(data.city)) : "");
     $("#greet").innerHTML = family
       ? `${esc(u.dear(greetName()))}<small>${esc(u.dearSub)}</small>`
-      : `${esc(u.invited)}${has(data.city) ? `<small>${esc(u.invitedSub(pick(data.city)))}</small>` : ""}`; // the quick start leaves the city for later
+      : `${esc(u.invited)}${sub ? `<small>${esc(sub)}</small>` : ""}`;
     $("#greet").lang = lang;
     const type = theme.opening?.type || "envelope";
     // A theme may word its own hint (Genda's marigold strings use the curtains opening).
@@ -785,9 +788,10 @@
   async function loadLayout(name) {
     const id = String(name).replace(/[^a-z0-9-]/gi, "");
     const css = document.createElement("link");
-    css.rel = "stylesheet"; css.href = `${ROOT}layouts/${id}.css`;
+    css.rel = "stylesheet"; css.href = `${ROOT}layouts/${id}.css?v=22`;
     document.head.appendChild(css);
-    await new Promise((ok) => { const s = document.createElement("script"); s.src = `${ROOT}layouts/${id}.js`; s.onload = s.onerror = ok; document.head.appendChild(s); });
+    if (id === "keepsake") await new Promise((ok) => { const s = document.createElement("script"); s.src = `${ROOT}layouts/names-hand.js?v=9`; s.onload = s.onerror = ok; document.head.appendChild(s); });
+    await new Promise((ok) => { const s = document.createElement("script"); s.src = `${ROOT}layouts/${id}.js?v=13`; s.onload = s.onerror = ok; document.head.appendChild(s); });
     document.body.classList.add(`layout-${id}`);
     return window.SaathLayouts?.[id] || null;
   }
@@ -1044,20 +1048,23 @@
     // The day, the month and the year each under its own foil, or the whole date under one, as the
     // couple chooses in the editor (scratch: "one", Gautam, 4 November 2026).
     const one = data.scratch === "one";
+    const arch = Boolean(theme.art?.scratch);
     const parts = one
       ? [[u.date, fmt(day, { day: "numeric", month: "long", year: "numeric" }), true]]
       : [[u.day, fmt(day, { day: "numeric" }), false], [u.month, fmt(day, { month: "long" }), true], [u.year, fmt(day, { year: "numeric" }), false]];
     // Nobody watching the video invite can scratch: there the line says what the film shows (the
     // collab bride Dipanwita, 3 November 2026).
+    const frameSrc = arch ? esc(base + encodeURI(theme.art.scratch)) : "";
     return sec("date", u.dateT, `
       <p class="sparkle-line reveal" lang="${lang}"><b aria-hidden="true">✦</b>${esc(params.has("video") ? u.revealing : u.scratch)}<b aria-hidden="true">✦</b></p>
-      <div class="cards${one ? " one" : ""}">
+      <div class="cards${one ? " one" : ""}${arch ? " arch-foil" : ""}">
         ${parts.map(([unit, v, word], i) => `
           <div class="card">
-            <button class="foil${revealed.has(i) ? " done" : ""}" type="button" data-i="${i}" data-unit="${esc(unit)}" data-v="${esc(v)}"
+            <button class="foil${arch ? " arch" : ""}${revealed.has(i) ? " done" : ""}" type="button" data-i="${i}" data-unit="${esc(unit)}" data-v="${esc(v)}"
               aria-label="${esc(revealed.has(i) ? u.revealed(unit, v) : u.scratchLabel(unit))}">
               <span class="val${word ? " word" : ""}" lang="${lang}" aria-hidden="true">${esc(v)}</span>
               <canvas aria-hidden="true"></canvas>
+              ${frameSrc ? `<img class="foil-frame" src="${frameSrc}" alt="" draggable="false">` : ""}
             </button>
             ${one ? "" : `<span class="caps" lang="${lang}">${esc(unit)}</span>`}
           </div>`).join("")}
@@ -1199,7 +1206,7 @@
       ${data.venue.photo ? `<img class="venue-art venue-photo reveal" src="${esc(media(data.venue.photo))}" alt="" loading="lazy" decoding="async" data-clarity-mask="true">`
         : art("venue") ? `<img class="venue-art reveal" src="${art("venue")}" alt="" loading="lazy" decoding="async">` : ""}
       ${data.venue.map ? `<div class="map reveal" id="mapBox"><button class="map-load" type="button" lang="${lang}">${esc(u.showMap)}</button></div>
-      <a class="btn" href="${esc(data.venue.map)}" target="_blank" rel="noopener" lang="${lang}">${esc(u.maps)}</a>` : ""}
+      ${art("mapsBadge") ? `<a class="maps-badge" href="${esc(data.venue.map)}" target="_blank" rel="noopener"><img src="${esc(art("mapsBadge"))}" alt="${esc(u.maps)}"></a>` : `<a class="btn" href="${esc(data.venue.map)}" target="_blank" rel="noopener" lang="${lang}">${esc(u.maps)}</a>`}` : ""}
       ${places.map(({ evs: [e, ...more] }) => { const map = [e, ...more].map(mapOf).find(Boolean); return `<div class="venue-also reveal">
         <p class="caps venue-for" lang="${lang}">${esc(andList([e, ...more].map((x) => pick(x.name))))}</p>
         ${has(e.place) ? `<p class="venue-name" lang="${lang}">${esc(pick(e.place))}</p>` : ""}
@@ -1365,7 +1372,6 @@
         ${has(data.signoff) ? `<p class="so-text" lang="${lang}">${esc(nb(pick(data.signoff)))}</p>` : ""}
         ${logoMark("so-logo")}
         <p class="so-names" lang="${lang}">${names}</p>
-        <a class="made" href="https://saath.studio" target="_blank" rel="noopener"><span lang="${lang}">${esc(u.made)}</span><img src="${ROOT}mark.svg" alt="" width="16" height="16">saath.studio</a>
       </footer>`;
     document.documentElement.style.setProperty("--arch", `url("${archMask()}")`);
     drawArch();
@@ -1413,9 +1419,16 @@
   // The map is Google's and the song player is YouTube's or Spotify's: both load only on a tap.
   function loadMap() {
     let q = `${data.venue.name?.en || ""}, ${data.city?.en || ""}`;
-    try { q = new URL(data.venue.map).searchParams.get("query") || q; } catch {}
+    let z = 14;
+    try {
+      const url = new URL(data.venue.map);
+      const query = url.searchParams.get("query");
+      const at = url.pathname.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)(?:,(\d+)z)?/);
+      if (query) q = query;
+      else if (at) { q = `${at[1]},${at[2]}`; if (at[3]) z = at[3]; }
+    } catch {}
     $("#mapBox").classList.add("loaded");
-    $("#mapBox").innerHTML = `<iframe title="${esc(t().mapTitle(pick(data.venue.name)))}" src="https://maps.google.com/maps?q=${encodeURIComponent(q)}&z=14&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`;
+    $("#mapBox").innerHTML = `<iframe title="${esc(t().mapTitle(pick(data.venue.name)))}" src="https://maps.google.com/maps?q=${encodeURIComponent(q)}&z=${z}&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`;
   }
   function watchSong() {
     const box = $("#songBox");
@@ -1505,19 +1518,61 @@
   }
 
   // ───────── Gold foil to scratch ─────────
+  // A theme may bring its own frame (kanjivaram's lotus arch). The frame stays; only the gold
+  // inside its opening is foil, and scratching that reveals the date.
+  let scratchImg = null;
+  function scratchImage() {
+    const file = theme.art?.scratch;
+    if (!file) return null;
+    if (!scratchImg) {
+      scratchImg = new Image();
+      scratchImg.src = base + encodeURI(file);
+    }
+    return scratchImg;
+  }
+  // The opening is the clear region you can reach from the middle without crossing the frame.
+  function holeMask(img, W, H) {
+    const key = `${W}x${H}`;
+    if (img._maskKey === key) return img._mask;
+    const c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    const g = c.getContext("2d", { willReadFrequently: true });
+    g.drawImage(img, 0, 0, W, H);
+    const px = g.getImageData(0, 0, W, H).data;
+    const seen = new Uint8Array(W * H);
+    const interior = new Uint8Array(W * H);
+    const stack = [(W / 2) | 0, (H / 2) | 0];
+    while (stack.length) {
+      const y = stack.pop(), x = stack.pop();
+      if (x < 0 || y < 0 || x >= W || y >= H) continue;
+      const i = y * W + x;
+      if (seen[i]) continue;
+      seen[i] = 1;
+      if (px[i * 4 + 3] > 48) continue;
+      interior[i] = 1;
+      stack.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1);
+    }
+    img._mask = interior;
+    img._maskKey = key;
+    return interior;
+  }
   function foil(btn) {
     const i = +btn.dataset.i;
     if (revealed.has(i)) return;
     const cvs = $("canvas", btn), ctx = cvs.getContext("2d", { willReadFrequently: true });
     const dpr = Math.min(2, devicePixelRatio || 1);
     let w = 0, h = 0;
+    const img = scratchImage();
     const gold = getComputedStyle(document.documentElement).getPropertyValue("--gold").trim() || "#b08d4c";
+    let mask = null;
     const paint = () => {
       w = btn.clientWidth; h = btn.clientHeight;
       if (!w) return;
       cvs.width = Math.round(w * dpr); cvs.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.globalCompositeOperation = "source-over";
+      const framed = img && img.complete && img.naturalWidth;
+      if (framed) mask = holeMask(img, cvs.width, cvs.height);
       const g = ctx.createLinearGradient(0, 0, w, h);
       [[shade(gold, -0.35), 0], [shade(gold, 0.15), 0.22], [shade(gold, 0.55), 0.4], [shade(gold, -0.05), 0.58], [shade(gold, 0.4), 0.78], [shade(gold, -0.3), 1]].forEach(([c, o]) => g.addColorStop(o, c));
       ctx.fillStyle = g;
@@ -1526,13 +1581,27 @@
       for (let k = 0; k < (w * h) / 9; k++) { const a = Math.random(); ctx.fillStyle = a > 0.5 ? `rgba(255,250,230,${a * 0.5})` : `rgba(80,55,20,${a * 0.25})`; ctx.fillRect(Math.random() * w, Math.random() * h, 1, 1); }
       ctx.strokeStyle = "rgba(255,246,215,.6)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.roundRect(5.5, 5.5, w - 11, h - 11, 8); ctx.stroke();
       ctx.fillStyle = "rgba(255,248,226,.75)"; ctx.font = `${Math.round(Math.min(w, h * 1.2) * 0.2)}px serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("✦", w / 2, h / 2);
+      if (framed) {
+        const id = ctx.getImageData(0, 0, cvs.width, cvs.height);
+        const p = id.data;
+        for (let i = 0; i < mask.length; i++) if (!mask[i]) p[i * 4 + 3] = 0;
+        ctx.putImageData(id, 0, 0);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
     };
     paint();
+    if (img && !(img.complete && img.naturalWidth)) img.addEventListener("load", () => { if (!revealed.has(i)) paint(); }, { once: true });
     new ResizeObserver(() => !revealed.has(i) && btn.clientWidth !== w && paint()).observe(btn);
     let down = false, last = null, moves = 0;
     const pt = (e) => { const r = cvs.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
     const scratch = (a, b) => { ctx.globalCompositeOperation = "destination-out"; ctx.lineCap = ctx.lineJoin = "round"; ctx.lineWidth = Math.max(22, w * 0.26); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x + 0.01, b.y); ctx.stroke(); };
-    const cleared = () => { const px = ctx.getImageData(0, 0, cvs.width, cvs.height).data; let c = 0, n = 0; for (let k = 3; k < px.length; k += 4 * 23) { n++; if (px[k] < 40) c++; } return c / n; };
+    const cleared = () => {
+      const px = ctx.getImageData(0, 0, cvs.width, cvs.height).data;
+      let c = 0, n = 0;
+      if (!mask) { for (let k = 3; k < px.length; k += 4 * 23) { n++; if (px[k] < 40) c++; } return n ? c / n : 0; }
+      for (let i = 0; i < mask.length; i += 17) { if (!mask[i]) continue; n++; if (px[i * 4 + 3] < 40) c++; }
+      return n ? c / n : 0;
+    };
     const check = () => cleared() > 0.45 && done();
     btn.addEventListener("pointerdown", (e) => { if (revealed.has(i)) return; down = true; last = pt(e); try { btn.setPointerCapture(e.pointerId); } catch {} scratch(last, last); });
     btn.addEventListener("pointermove", (e) => { if (!down) return; const p = pt(e); scratch(last, p); last = p; if (++moves % 8 === 0) check(); });

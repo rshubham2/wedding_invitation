@@ -6,12 +6,13 @@
   "story": "Kanjivaram silk is woven in the temple town of Kanchipuram from heavy mulberry silk, its contrast border joined to the body by hand and worked in gold zari: temple borders, mango buttas, the swan called annapakshi. Our invite comes wrapped in a fold of rani pink silk with a jasmine string, the way the muhurtham saree comes to the bride.",
   "palette": {
     "ink": "#2B1A12",
-    "paper": "#F6EEDD",
+    "paper": "#F3E8D5",
     "accent": "#A3124A",
     "accent2": "#E6D3A8",
     "gold": "#B98A25",
     "night": "#2E0A1C"
   },
+  "music": "Unveiling a Dream (1).mp3.mp3",
   "fonts": {
     "script": "Corinthia",
     "serif": "Cormorant Garamond",
@@ -42,42 +43,44 @@
   },
   "opening": {
     "type": "keepsake",
-    "gesture": "jasmine",
-    "film": "opening.mp4",
+    "gesture": "box",
+    "film": "Handcrafted Paper Wedding Invitation Reveal.mp4",
     "first": "opening-first.webp",
     "last": "opening-last.webp",
     "aspect": "9 / 16",
     "focus": [
-      0.07,
-      0.2,
+      0.08,
+      0.06,
       0.92,
-      0.83
+      0.98
     ],
     "tap": [
-      0.08,
-      0.22,
-      0.92,
-      0.81
+      0.14,
+      0.15,
+      0.86,
+      0.84
     ],
-    "from": 0.6,
-    "rate": 1.1,
-    "writeAt": 3.55,
+    "from": 0,
+    "rate": 1,
+    "words": false,
+    "writeAt": 8.6,
     "names": {
-      "left": 0.265,
-      "top": 0.375,
-      "right": 0.715,
-      "bottom": 0.695
+      "left": 0.16,
+      "top": 0.812,
+      "right": 0.84,
+      "bottom": 0.918
     },
-    "tone": "dark",
+    "tone": "light",
+    "cityLine": false,
     "hint": {
-      "en": "Tap the jasmine to open",
-      "hi": "खोलने के लिए मोगरे को छुएँ",
-      "mr": "उघडण्यासाठी मोगरा दाबा"
+      "en": "Tap the box to open",
+      "hi": "खोलने के लिए पेटी को छुएँ",
+      "mr": "उघडण्यासाठी पेटी दाबा"
     },
-    "filmNote": "Made once in Google Flow (experiments/collections/2026-10-31-next-films, runs/flow/generations.json): Nano Banana keyframes kanjivaram-k0-a (the silk parcel tied with jasmine) and kanjivaram-k1-c (the silk opened, the blank card centred), and a Veo 3.1 Fast clip between them. The clip is cut at 3.9 s, before Veo dropped loose jasmine buds in from the top, settled onto the first keyframe and cropped to the centred 9:16 window clear of Flow's marks (x 0.07 to 0.93, y 0.045 to 0.905). The last frame is the film's own. Positions are fractions of the cropped frame.",
+    "filmNote": "Handcrafted Paper Wedding Invitation Reveal.mp4 (10.08 s, 720×1280). opening-first.webp and opening-last.webp are that film's own first and last frames, so the still before the tap and the card the page holds afterwards match the picture with no jump. Names are written once the paper scene has settled.",
     "edge": {
-      "top": "#f0dbbd",
-      "bottom": "#dec09c"
+      "top": "#032213",
+      "bottom": "#062819"
     }
   },
   "art": {
@@ -88,6 +91,7 @@
     "divider": "divider.webp",
     "corner": "corner.webp",
     "motif": "motif.webp",
+    "scratch": "Ornate Gold Arch Frame with Lotus Motif-Photoroom.png",
     "frameZone": {
       "top": 0.1,
       "bottom": 0.895,
@@ -103,14 +107,15 @@
       ]
     },
     "fn": {
-      "haldi": "fn-haldi.webp",
+      "haldi": "Golden Turmeric Ritual Still Life.png",
       "mehendi": "fn-mehendi.webp",
       "sangeet": "fn-sangeet.webp",
-      "wedding": "fn-wedding.webp",
+      "wedding": "wedding_mandap_transparent.png",
       "reception": "fn-reception.webp",
       "engagement": "fn-engagement.webp"
     },
-    "venue": "venue.webp",
+    "venue": "Watercolour Retreat with Lotus Arch.png",
+    "mapsBadge": "Ornate Open in Google Maps Badge.png",
     "dress": "dress.webp",
     "scenes": {
       "invite": {
