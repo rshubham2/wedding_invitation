@@ -419,11 +419,11 @@
     if (SAATH.draft || params.has("draft")) { try { draft = JSON.parse(localStorage.getItem("saath-draft") || "null"); } catch {} }
     data = tidy(draft || SAATH.data || (await (await fetch(`${ROOT}couples/${slug}/invite.json`)).json()));
     let themeId = (params.get("t") || data.theme || "jharokha").replace(/[^a-z0-9-]/gi, "");
-    let res = await fetch(`${ROOT}themes/${themeId}/theme.json?v=10`);
+    let res = await fetch(`${ROOT}themes/${themeId}/theme.json?v=12`);
     // A collection that isn't built yet falls back to the first one that is.
     if (!res.ok) {
       try { themeId = (await (await fetch(`${ROOT}themes/index.json`)).json())[0].id; } catch { themeId = "jharokha"; }
-      res = await fetch(`${ROOT}themes/${themeId}/theme.json?v=10`);
+      res = await fetch(`${ROOT}themes/${themeId}/theme.json?v=12`);
     }
     base = `${ROOT}themes/${themeId}/`;
     theme = await res.json();
@@ -539,6 +539,8 @@
     if (art("paper")) r.setProperty("--paper-tex", `url("${art("paper")}")`);
     if (art("rosette")) r.setProperty("--count-rose", `url("${art("rosette")}")`);
     if (art("archFrame")) r.setProperty("--arch-frame", `url("${art("archFrame")}")`);
+    if (art("eventsFrame")) r.setProperty("--events-frame", `url("${art("eventsFrame")}")`);
+    if (art("familyBg")) r.setProperty("--family-bg", `url("${art("familyBg")}")`);
     // The couple's own song (kept with their photos), a track from the music library, or the design's
     // own, on a loop. "off": no music and no button.
     if (data.music === "off") $("#soundBtn").style.display = "none";
@@ -1150,7 +1152,9 @@
     // A close-family function carries no "Family only" tag: only the families marked close see it
     // anyway, and couples didn't want the tag on their guests' invites (Kriti & Partha, 3 November 2026).
     const arts = fnArt(data.events || []);
+    const frame = art("eventsFrame");
     return sec("celebrations", u.eventsT, `
+      ${frame ? `<div class="timeline-frame">` : ""}
       <div class="timeline">
         ${events().map((e) => {
           const slot = SLOT_FOR(e);
@@ -1176,7 +1180,8 @@
             </div>
           </article>`;
         }).join("")}
-      </div>`);
+      </div>
+      ${frame ? `</div>` : ""}`);
   }
 
   function secCountdown() {
@@ -1256,7 +1261,7 @@
         ${group("darshanabhilashi", u.darshan)}
         ${group("swagatotsuk", u.swagat)}
         ${kids.length || own("kidsLine") ? `<div class="fam reveal kids"><p class="caps" lang="${lang}">${esc(u.kids)}</p><p class="kids-line" lang="${lang}">${esc(u.kidsLine(kids.map(pick).join(", ")))}</p></div>` : ""}
-      </div>`);
+      </div>`).replace(`class="sec"`, `class="sec${art("familyBg") ? " family-wash" : ""}"`);
   }
 
   // The couple's song as a now-playing card: the record's cover (or a photo of the two of them),
@@ -1405,10 +1410,11 @@
   // shrink it until it fits its line instead of letting it push the page sideways. The signoff's
   // names wrap between words, so only a single word longer than the line shrinks there.
   function fitWords() {
-    for (const el of $$(".inv .name, .so-names")) {
+    for (const el of $$(".inv .name, .so-names, .so-text")) {
       el.style.fontSize = "";
       el.style.whiteSpace = "";
-      const room = el.parentElement.clientWidth;
+      const pad = el.classList.contains("so-text") ? parseFloat(getComputedStyle(el.parentElement).paddingLeft) + parseFloat(getComputedStyle(el.parentElement).paddingRight) : 0;
+      const room = el.parentElement.clientWidth - pad;
       if (!room) continue;
       const size = parseFloat(getComputedStyle(el).fontSize);
       for (let i = 0; i < 4 && el.scrollWidth > room + 1; i++) {
@@ -1416,7 +1422,7 @@
       }
       // A full name too long for one line even at the smallest size goes onto two, at its spaces,
       // rather than past the edge of the page.
-      if (el.scrollWidth > room + 1) el.style.whiteSpace = "normal";
+      if (!el.classList.contains("so-text") && el.scrollWidth > room + 1) el.style.whiteSpace = "normal";
     }
   }
 

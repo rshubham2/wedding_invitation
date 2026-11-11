@@ -460,6 +460,9 @@ body.dark .hw-name { filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.6)); }
 .tl .textbtn + .textbtn { margin-top: 0; }
 .tl .addr { font: 400 13.5px/1.35 var(--serif); color: var(--ink-soft); }
 .tl .addr:is(:lang(hi), :lang(mr)) { font: 400 13px/1.5 var(--deva); }
+/* The lotus frame wraps the celebrations as they already are, stretched to that block. */
+.timeline-frame { box-sizing: border-box; width: calc(100% + 48px); margin: 8px -24px 0; padding: 15% 7% 14%; background: var(--events-frame) center / 100% 100% no-repeat; }
+.timeline-frame .timeline { margin: 0 auto; }
 
 /* Countdown */
 .count { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; margin: 4px auto 0; max-width: 360px; }
@@ -539,6 +542,12 @@ body.dark .hw-name { filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.6)); }
 .fam-name { margin: 7px 0; font: 500 18px/1.45 var(--serif); color: var(--ink); }
 .fam-name:is(:lang(hi), :lang(mr)) { font: 400 17px/1.6 var(--deva); }
 .kids-line { margin: 0; font: italic 400 19px/1.5 var(--serif); color: var(--accent-text, var(--accent)); }
+/* The families stay as they are; the wash is only the ground, so the type turns cream to read on it. */
+.sec.family-wash { background: var(--family-bg) center / cover no-repeat; padding-bottom: 48px; }
+.sec.family-wash .h { background: none; background-clip: border-box; -webkit-background-clip: border-box; -webkit-text-fill-color: #f3e8d5; color: #f3e8d5; }
+.sec.family-wash .caps { color: #e7d3a8; }
+.sec.family-wash .fam-name,
+.sec.family-wash .kids-line { color: #f3e8d5; }
 .kids-line:is(:lang(hi), :lang(mr)) { font: 400 17px/1.6 var(--deva); }
 
 /* Song, voice, contacts, shagun */
@@ -636,7 +645,7 @@ audio { width: 100%; max-width: 360px; margin-top: 8px; }
 @media (prefers-reduced-motion: reduce) { .rsvp-confirm[open] { animation: none; } }
 
 .signoff { padding: 56px 24px calc(56px + var(--safe-b)); text-align: center; }
-.so-text { margin: 0 auto; max-width: 26ch; font: italic 400 19px/1.45 var(--serif); color: var(--ink); }
+.so-text { margin: 0 auto; max-width: none; white-space: nowrap; font: italic 400 19px/1.45 var(--serif); color: var(--ink); }
 .so-text:is(:lang(hi), :lang(mr)) { font: 400 17px/1.6 var(--deva); }
 .so-names { margin: 10px 0 0; font: 400 40px/1.2 var(--script); color: var(--gold-text, var(--gold-deep)); }
 .so-amp { font: italic 400 30px/1 var(--serif); margin: 0 0.06em; }
@@ -672,7 +681,7 @@ audio { width: 100%; max-width: 360px; margin-top: 8px; }
 :is(.greet small, .hw-date, .caps, .h3, .inv .parents, .city, .btn span):is(:lang(hi), :lang(mr)) { padding-inline-start: 0; }
 
 /* Lines break where a reader would: no lone last words under centred text. */
-.sec :is(p, h2, h3, li, figcaption), .signoff p, .hero-words p { text-wrap: balance; }
+.sec :is(p, h2, h3, li, figcaption), .signoff p:not(.so-text), .hero-words p { text-wrap: balance; }
 .tl .txt p, .dress-list p, .story-text { text-wrap: pretty; }
 
 /* Before the map loads, the box shows a drawn street plan rather than an empty frame. */
