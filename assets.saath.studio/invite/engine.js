@@ -419,11 +419,11 @@
     if (SAATH.draft || params.has("draft")) { try { draft = JSON.parse(localStorage.getItem("saath-draft") || "null"); } catch {} }
     data = tidy(draft || SAATH.data || (await (await fetch(`${ROOT}couples/${slug}/invite.json`)).json()));
     let themeId = (params.get("t") || data.theme || "jharokha").replace(/[^a-z0-9-]/gi, "");
-    let res = await fetch(`${ROOT}themes/${themeId}/theme.json?v=5`);
+    let res = await fetch(`${ROOT}themes/${themeId}/theme.json?v=6`);
     // A collection that isn't built yet falls back to the first one that is.
     if (!res.ok) {
       try { themeId = (await (await fetch(`${ROOT}themes/index.json`)).json())[0].id; } catch { themeId = "jharokha"; }
-      res = await fetch(`${ROOT}themes/${themeId}/theme.json?v=5`);
+      res = await fetch(`${ROOT}themes/${themeId}/theme.json?v=6`);
     }
     base = `${ROOT}themes/${themeId}/`;
     theme = await res.json();
@@ -788,9 +788,9 @@
   async function loadLayout(name) {
     const id = String(name).replace(/[^a-z0-9-]/gi, "");
     const css = document.createElement("link");
-    css.rel = "stylesheet"; css.href = `${ROOT}layouts/${id}.css?v=22`;
+    css.rel = "stylesheet"; css.href = `${ROOT}layouts/${id}.css?v=24`;
     document.head.appendChild(css);
-    if (id === "keepsake") await new Promise((ok) => { const s = document.createElement("script"); s.src = `${ROOT}layouts/names-hand.js?v=9`; s.onload = s.onerror = ok; document.head.appendChild(s); });
+    if (id === "keepsake") await new Promise((ok) => { const s = document.createElement("script"); s.src = `${ROOT}layouts/names-hand.js?v=10`; s.onload = s.onerror = ok; document.head.appendChild(s); });
     await new Promise((ok) => { const s = document.createElement("script"); s.src = `${ROOT}layouts/${id}.js?v=13`; s.onload = s.onerror = ok; document.head.appendChild(s); });
     document.body.classList.add(`layout-${id}`);
     return window.SaathLayouts?.[id] || null;
@@ -1051,7 +1051,7 @@
     const arch = Boolean(theme.art?.scratch);
     const parts = one
       ? [[u.date, fmt(day, { day: "numeric", month: "long", year: "numeric" }), true]]
-      : [[u.day, fmt(day, { day: "numeric" }), false], [u.month, fmt(day, { month: "long" }), true], [u.year, fmt(day, { year: "numeric" }), false]];
+      : [[u.day, fmt(day, { day: "numeric" }), false], [u.month, fmt(day, { month: lang === "en" ? "short" : "long" }), lang !== "en"], [u.year, fmt(day, { year: "numeric" }), false]];
     // Nobody watching the video invite can scratch: there the line says what the film shows (the
     // collab bride Dipanwita, 3 November 2026).
     const frameSrc = arch ? esc(base + encodeURI(theme.art.scratch)) : "";
