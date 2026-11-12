@@ -1170,7 +1170,7 @@
             <div class="txt reveal">
               <span class="caps" lang="${lang}">${esc(fmt(e.start, { weekday: "short", day: "numeric", month: "short" }))}</span>
               <span class="time" lang="${lang}">${esc(clock(e.start))}</span>
-              <span class="nm" lang="${lang}">${esc(pick(e.name))}${lang === "en" && (e.name.mr || e.name.hi) ? `<small lang="mr">${esc(e.name.mr || e.name.hi)}</small>` : ""}</span>
+              <span class="nm" lang="${lang}">${esc(pick(e.name))}</span>
               ${has(e.place) ? `<span class="place" lang="${lang}">${esc(pick(e.place))}</span>` : ""}
               ${has(e.address) && !has(e.place) ? `<span class="addr" lang="${lang}">${esc(pick(e.address))}</span>` : ""}
               ${has(e.address) && has(e.place) && awayTown(e) ? `<span class="addr" lang="${lang}">${esc(awayTown(e))}</span>` : ""}
@@ -1237,7 +1237,7 @@
       ${art("dress") ? `<img class="dress-art reveal" src="${art("dress")}" alt="" loading="lazy" decoding="async">` : ""}
       <div class="dress-list">
         ${events().filter((e) => has(e.dress) || has(e.palette)).map((e) => `<div class="dress reveal">
-          <span class="nm" lang="${lang}">${esc(pick(e.name))}${lang === "en" && (e.name.mr || e.name.hi) ? `<small lang="mr">${esc(e.name.mr || e.name.hi)}</small>` : ""}</span>
+          <span class="nm" lang="${lang}">${esc(pick(e.name))}</span>
           ${has(e.palette) ? `<span class="dots" aria-hidden="true">${e.palette.map((c) => `<i style="background:${esc(c)}"></i>`).join("")}</span>` : "<span></span>"}
           ${has(e.dress) ? `<p lang="${lang}">${esc(pick(e.dress))}</p>` : ""}
         </div>`).join("")}
