@@ -1755,19 +1755,43 @@
 
   function downloadIcs(ev) {
     const stamp = (iso) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    const summary = `${two(data.her.en, data.him.en).join(" & ")}: ${ev.name.en || pick(ev.name)}`;
+    const location = (ownVenue(ev) ? [ev.place?.en, ev.address?.en] : [ev.place?.en, data.venue?.name?.en, data.city?.en]).filter(Boolean).join(", ");
+    const description = ev.dress?.en || (ev.dress ? pick(ev.dress) : "");
+
+    const startDate = new Date(ev.start);
+    let endDate = ev.end ? new Date(ev.end) : new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+    if (isNaN(endDate.getTime()) || endDate <= startDate) {
+      endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+    }
+
+    const ua = navigator.userAgent || "";
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/i.test(ua);
+
+    // 1. Android & Desktop: Open directly in Google Calendar (opens Google Calendar App on Android)
+    if (isAndroid || !isIOS) {
+      const gUrl = "https://calendar.google.com/calendar/render?action=TEMPLATE"
+        + `&text=${encodeURIComponent(summary)}`
+        + `&dates=${stamp(startDate.toISOString())}/${stamp(endDate.toISOString())}`
+        + (location ? `&location=${encodeURIComponent(location)}` : "")
+        + (description ? `&details=${encodeURIComponent(description)}` : "");
+      window.open(gUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    // 2. iOS (iPhone / iPad): Direct native Apple Calendar sheet (bypasses file download)
     const ics = [
       "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Saath Studio//Invite//EN", "BEGIN:VEVENT",
       `UID:${slug}-${ev.id}@saath.studio`, `DTSTAMP:${stamp(new Date().toISOString())}`,
-      `DTSTART:${stamp(ev.start)}`, `DTEND:${stamp(ev.end || ev.start)}`,
-      `SUMMARY:${two(data.her.en, data.him.en).join(" & ")}: ${ev.name.en}`,
-      `LOCATION:${(ownVenue(ev) ? [ev.place?.en, ev.address?.en] : [ev.place?.en, data.venue?.name?.en, data.city?.en]).filter(Boolean).join(", ")}`,
-      ev.dress?.en ? `DESCRIPTION:${ev.dress.en}` : null, "END:VEVENT", "END:VCALENDAR",
+      `DTSTART:${stamp(startDate.toISOString())}`, `DTEND:${stamp(endDate.toISOString())}`,
+      `SUMMARY:${summary}`,
+      location ? `LOCATION:${location}` : null,
+      description ? `DESCRIPTION:${description}` : null,
+      "END:VEVENT", "END:VCALENDAR",
     ].filter(Boolean).join("\r\n");
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
-    a.download = `${slug}-${ev.id}.ics`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+
+    window.location.href = "data:text/calendar;charset=utf8," + encodeURIComponent(ics);
   }
 
   /** Copies the UPI ID, and says so for a moment where the hint was. */
