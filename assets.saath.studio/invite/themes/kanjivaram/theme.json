@@ -16,7 +16,7 @@
   "fonts": {
     "script": "Corinthia",
     "serif": "Cormorant Garamond",
-    "deva": "Tiro Devanagari Hindi",
+    "deva": "Noto Sans Devanagari",
     "display": "Playfair Display"
   },
   "moods": {

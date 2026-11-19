@@ -15,9 +15,9 @@
   --gold-deep: color-mix(in srgb, var(--gold) 72%, black);
   --foil: linear-gradient(100deg, color-mix(in srgb, var(--gold) 72%, black) 0%, var(--gold) 22%, color-mix(in srgb, var(--gold) 45%, white) 38%, color-mix(in srgb, var(--gold) 92%, black) 55%, color-mix(in srgb, var(--gold) 62%, white) 72%, color-mix(in srgb, var(--gold) 70%, black) 100%);
   --foil-deep: linear-gradient(100deg, color-mix(in srgb, var(--gold) 55%, black) 0%, color-mix(in srgb, var(--gold) 85%, black) 30%, color-mix(in srgb, var(--gold) 70%, white) 48%, color-mix(in srgb, var(--gold) 80%, black) 66%, color-mix(in srgb, var(--gold) 50%, black) 100%);
-  --script: "Pinyon Script", "Tiro Devanagari Hindi", cursive;
-  --serif: "Cormorant Garamond", "Tiro Devanagari Hindi", Georgia, serif;
-  --deva: "Tiro Devanagari Hindi", "Cormorant Garamond", serif;
+  --script: "Pinyon Script", "Noto Sans Devanagari", "Tiro Devanagari Hindi", cursive;
+  --serif: "Cormorant Garamond", "Noto Sans Devanagari", "Tiro Devanagari Hindi", Georgia, serif;
+  --deva: "Noto Sans Devanagari", "Tiro Devanagari Hindi", "Cormorant Garamond", serif;
   --display: var(--serif);
   --paper-tex: none;
   --col: min(100vw, 460px);
@@ -411,16 +411,18 @@ body.dark .hw-name { filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.6)); }
 .inv-follow { margin-top: 16px !important; }
 
 /* Story */
-.dear { margin: 6px 0 6px; font: 400 clamp(26px, 7.6vw, 31px)/1.2 var(--script); color: var(--gold-deep); }
-.dear:is(:lang(hi), :lang(mr)) { font: 400 22px/1.4 var(--deva); }
-.story { margin: 0 auto; max-width: 28ch; font-size: 19px; line-height: 1.5; color: var(--ink); }
-.story:is(:lang(hi), :lang(mr)) { font-size: 17px; line-height: 1.7; }
-.story-line { list-style: none; margin: 26px auto 0; padding: 0; max-width: 340px; display: grid; gap: 18px; text-align: left; border-left: 1px solid var(--line); }
-.story-line li { position: relative; padding-left: 20px; display: grid; }
-.story-line li::before { content: ""; position: absolute; left: -5px; top: 7px; width: 9px; height: 9px; rotate: 45deg; background: var(--paper); border: 1px solid var(--gold); }
-.sl-when { font: 400 24px/1.1 var(--script); color: var(--gold-deep); }
-.sl-when:is(:lang(hi), :lang(mr)) { font: 400 16px/1.4 var(--deva); }
-.sl-what { font-size: 17px; color: var(--ink); }
+#story.sec { padding: clamp(22px, 5vw, 32px) 20px clamp(20px, 4vw, 28px); }
+#story .sec-orn { margin: 4px auto 10px; }
+.dear { margin: 4px 0 6px; font: 400 clamp(24px, 7vw, 28px)/1.2 var(--script); color: var(--gold-deep); }
+.dear:is(:lang(hi), :lang(mr)) { font: 400 20px/1.4 var(--deva); }
+.story { margin: 0 auto; max-width: min(100%, 360px); font-size: clamp(15px, 3.8vw, 16px); line-height: 1.45; color: var(--ink); }
+.story:is(:lang(hi), :lang(mr)) { font-size: clamp(14px, 3.7vw, 15px); line-height: 1.55; }
+.story-line { list-style: none; margin: 22px auto 0; padding: 0; max-width: min(100%, 350px); display: grid; gap: 12px; text-align: left; border-left: 1px solid var(--line); }
+.story-line li { position: relative; padding-left: 20px; display: grid; gap: 3px; }
+.story-line li::before { content: ""; position: absolute; left: -5px; top: 6px; width: 9px; height: 9px; rotate: 45deg; background: var(--paper); border: 1px solid var(--gold); }
+.sl-when { font: 400 clamp(22px, 5.6vw, 25px)/1.15 var(--script); color: var(--gold-deep); }
+.sl-when:is(:lang(hi), :lang(mr)) { font: 500 16.5px/1.35 var(--deva); }
+.sl-what { font-size: clamp(14.5px, 3.9vw, 15.5px); line-height: 1.4; color: var(--ink); }
 
 /* Photos */
 .photos { display: grid; grid-auto-flow: column; grid-auto-columns: 62%; gap: 14px; margin: 4px -24px 0; padding: 6px 24px 18px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
@@ -541,6 +543,8 @@ body.dark .hw-name { filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.6)); }
 .fam .caps { margin: 0 0 6px; }
 .fam-name { margin: 7px 0; font: 500 18px/1.45 var(--serif); color: var(--ink); }
 .fam-name:is(:lang(hi), :lang(mr)) { font: 400 17px/1.6 var(--deva); }
+.fam-name.fam-amp { margin: 2px 0; font: italic 400 18px/1 var(--serif); opacity: 0.85; }
+.fam-name.fam-amp:is(:lang(hi), :lang(mr)) { font: 400 16px/1 var(--deva); }
 .kids-line { margin: 0; font: italic 400 19px/1.5 var(--serif); color: var(--accent-text, var(--accent)); }
 /* The families stay as they are; the wash is only the ground, so the type turns cream to read on it. */
 .sec.family-wash { background: var(--family-bg) center / cover no-repeat; padding-bottom: 48px; }
@@ -570,6 +574,9 @@ body.dark .hw-name { filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.6)); }
 .sc-controls > svg { width: 26px; height: 26px; color: rgba(255, 255, 255, 0.86); }
 .sc-play { display: grid; place-items: center; width: 58px; height: 58px; padding: 0; border: 0; border-radius: 50%; background: #fff; color: color-mix(in srgb, var(--accent) 50%, #120a08); cursor: pointer; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3); transition: scale 160ms var(--ease-out); }
 .sc-play svg { width: 26px; height: 26px; margin-left: 3px; }
+.sc-play.is-playing svg { margin-left: 0; }
+.song-card.is-playing .sc-disc { animation: spinDisc 12s linear infinite; }
+@keyframes spinDisc { to { rotate: 360deg; } }
 .sc-play:active { scale: 0.94; }
 .sc-play:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 .sc-from { margin: 10px 0 0; font-size: 13px; letter-spacing: 0.04em; color: var(--ink-soft); }
@@ -645,7 +652,7 @@ audio { width: 100%; max-width: 360px; margin-top: 8px; }
 @media (prefers-reduced-motion: reduce) { .rsvp-confirm[open] { animation: none; } }
 
 .signoff { padding: 56px 24px calc(56px + var(--safe-b)); text-align: center; }
-.so-text { margin: 0 auto; max-width: none; white-space: nowrap; font: italic 400 19px/1.45 var(--serif); color: var(--ink); }
+.so-text { margin: 0 auto; max-width: 360px; text-wrap: balance; font: italic 400 19px/1.45 var(--serif); color: var(--ink); }
 .so-text:is(:lang(hi), :lang(mr)) { font: 400 17px/1.6 var(--deva); }
 .so-names { margin: 10px 0 0; font: 400 40px/1.2 var(--script); color: var(--gold-text, var(--gold-deep)); }
 .so-amp { font: italic 400 30px/1 var(--serif); margin: 0 0.06em; }
@@ -681,7 +688,7 @@ audio { width: 100%; max-width: 360px; margin-top: 8px; }
 :is(.greet small, .hw-date, .caps, .h3, .inv .parents, .city, .btn span):is(:lang(hi), :lang(mr)) { padding-inline-start: 0; }
 
 /* Lines break where a reader would: no lone last words under centred text. */
-.sec :is(p, h2, h3, li, figcaption), .signoff p:not(.so-text), .hero-words p { text-wrap: balance; }
+.sec :is(p, h2, h3, li, figcaption), .signoff p, .hero-words p { text-wrap: balance; }
 .tl .txt p, .dress-list p, .story-text { text-wrap: pretty; }
 
 /* Before the map loads, the box shows a drawn street plan rather than an empty frame. */

@@ -226,6 +226,7 @@
   const WA = `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.2a9.7 9.7 0 0 0-8.4 14.6L2.3 21.7l5-1.3A9.7 9.7 0 1 0 12 2.2Zm0 17.7c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9Zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8 1c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 2s.8 2.3 1 2.5c.1.1 1.6 2.5 4 3.5 1.5.6 2 .7 2.8.6.4-.1 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1l-.4-.3Z"/></svg>`;
   const CHEVRON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>`;
   const PLAY = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>`;
+  const PAUSE = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 5.5h3v13h-3zM13.5 5.5h3v13h-3z" fill="currentColor"/></svg>`;
 
   let data, theme, base, lang, family, group, opened = false, countTimer = 0;
   // Two things about the couple in the order they chose: the bride's first, or the groom's when
@@ -410,7 +411,7 @@
     return `${n.replace(/\s+(family|parivar|pariwar|परिवार|कुटुंब)$/i, "")} ${l === "mr" ? "कुटुंब" : "family"}`;
   };
   // Keep "Shri" with the name after it and "&" with the name before it, so lines never break between them.
-  const nb = (v) => String(v ?? "").replace(/(^|\s)(Late|Smt\.|Shrimati|Shri|Sri|Shree|Dr\.|Mr\.|Mrs\.|Ms\.|Col\.|Capt\.|Prof\.|श्रीमती|श्री|स्व\.|डॉ\.)\s+/g, "$1$2\u00a0").replace(/\s+(&|एवं|और)\s+/g, "\u00a0$1 ");
+  const nb = (v) => String(v ?? "").replace(/(^|\s)(Late|Smt\.|Shrimati|Shri|Sri|Shree|Dr\.|Mr\.|Mrs\.|Ms\.|Col\.|Capt\.|Prof\.|श्रीमती|श्री|स्व\.|कै\.|डॉ\.)\s+/g, "$1$2\u00a0").replace(/\s+(&|एवं|और|आणि)\s+/g, "\u00a0$1 ");
 
   // ───────── Boot ─────────
   async function boot() {
@@ -1253,14 +1254,18 @@
 
   function secFamily() {
     const u = t();
-    const group = (k, title) => (famList(k).length ? `<div class="fam reveal"><p class="caps" lang="${lang}">${esc(title)}</p>${famList(k).map((x) => `<p class="fam-name" lang="${lang}">${esc(nb(pick(x)))}</p>`).join("")}</div>` : "");
+    const group = (k, title) => (famList(k).length ? `<div class="fam reveal"><p class="caps" lang="${lang}">${esc(title)}</p>${famList(k).map((x) => {
+      const txt = pick(x);
+      const isAmp = /^(&|आणि|एवं)$/.test(String(txt).trim());
+      return `<p class="fam-name${isAmp ? " fam-amp" : ""}" lang="${lang}">${esc(nb(txt))}</p>`;
+    }).join("")}</div>` : "");
     const kids = famList("kids");
     return sec("family", u.familyT, `
       <div class="fam-tree">
         ${group("blessings", u.blessT)}
         ${group("darshanabhilashi", u.darshan)}
         ${group("swagatotsuk", u.swagat)}
-        ${kids.length || own("kidsLine") ? `<div class="fam reveal kids"><p class="caps" lang="${lang}">${esc(u.kids)}</p><p class="kids-line" lang="${lang}">${esc(u.kidsLine(kids.map(pick).join(", ")))}</p></div>` : ""}
+        ${kids.length || own("kidsLine") ? `<div class="fam reveal kids">${kids.length && u.kids ? `<p class="caps" lang="${lang}">${esc(u.kids)}</p>` : ""}<p class="kids-line" lang="${lang}">${esc(u.kidsLine(kids.map(pick).join(", ")))}</p></div>` : ""}
       </div>`).replace(`class="sec"`, `class="sec${art("familyBg") ? " family-wash" : ""}"`);
   }
 
@@ -1279,6 +1284,12 @@
     if (s.file) return sec("song", u.songT, `
       <div class="song-card reveal" id="songBox">
         ${art}
+        <div class="sc-player" id="songPlayer">
+          <div class="sc-bar" id="songBar" aria-hidden="true"><i id="songProg" style="right:100%"></i></div>
+          <div class="sc-controls">
+            <button class="sc-play" type="button" id="songToggle" aria-label="${esc(u.songPlay)}">${PLAY}</button>
+          </div>
+        </div>
         <audio id="songAudio" preload="auto" src="${esc(s.file)}"></audio>
       </div>`);
     const from = /spotify\.com/.test(s.url) ? "Spotify" : /youtu/.test(s.url) ? "YouTube" : "";
@@ -1444,30 +1455,96 @@
     const box = $("#songBox");
     const song = $("#songAudio");
     if (!box || !song) return;
+    const btn = $("#songToggle");
+    const prog = $("#songProg");
+    const bar = $("#songBar");
     const bg = $("#music");
-    let bgWasOn = false, shown = false;
+    let bgWasOn = false, shown = false, userPaused = false;
+
+    function setBtnPlaying(isPlaying) {
+      if (!btn) return;
+      btn.innerHTML = isPlaying ? PAUSE : PLAY;
+      btn.classList.toggle("is-playing", isPlaying);
+      btn.setAttribute("aria-label", isPlaying ? "Pause song" : "Play song");
+    }
+
+    song.addEventListener("timeupdate", () => {
+      if (prog && song.duration) {
+        const pct = Math.min(100, Math.max(0, (song.currentTime / song.duration) * 100));
+        prog.style.right = `${100 - pct}%`;
+      }
+    });
+
+    song.addEventListener("ended", () => {
+      setBtnPlaying(false);
+      box.classList.remove("is-playing");
+      if (prog) prog.style.right = "100%";
+      startMusic();
+    });
+
     new IntersectionObserver(([e]) => {
       if (e.isIntersecting) {
         shown = true;
         song.dataset.live = "1";
         const bgOn = !!(bg && !bg.paused);
-        song.play().then(() => {
-          if (song.dataset.live !== "1") { song.pause(); song.currentTime = 0; return; }
-          bgWasOn = bgOn;
-          if (bgOn) { bg.pause(); setSound(false); }
-          box.classList.add("is-playing");
-        }).catch(() => {});
+        if (!userPaused) {
+          song.play().then(() => {
+            if (song.dataset.live !== "1") { song.pause(); song.currentTime = 0; return; }
+            bgWasOn = bgOn;
+            if (bgOn) { bg.pause(); setSound(false); }
+            box.classList.add("is-playing");
+            setBtnPlaying(true);
+          }).catch(() => {});
+        }
         return;
       }
       const wasPlaying = shown && (!song.paused || song.dataset.live === "1");
       shown = false;
+      userPaused = false;
       song.dataset.live = "";
       song.pause();
       try { song.currentTime = 0; } catch {}
       box.classList.remove("is-playing");
-      if (wasPlaying && bgWasOn) startMusic();
+      setBtnPlaying(false);
+      if (prog) prog.style.right = "100%";
+      if (wasPlaying && (bgWasOn || $("#soundBtn")?.getAttribute("aria-pressed") !== "false")) {
+        startMusic();
+      }
       bgWasOn = false;
-    }, { threshold: 0.45 }).observe(box);
+    }, { threshold: 0.35 }).observe(box);
+
+    if (btn) {
+      btn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        if (song.paused) {
+          userPaused = false;
+          if (bg && !bg.paused) { bgWasOn = true; bg.pause(); setSound(false); }
+          song.dataset.live = "1";
+          song.play().then(() => {
+            box.classList.add("is-playing");
+            setBtnPlaying(true);
+          }).catch(() => {});
+        } else {
+          userPaused = true;
+          song.dataset.live = "";
+          song.pause();
+          box.classList.remove("is-playing");
+          setBtnPlaying(false);
+          startMusic();
+        }
+      });
+    }
+
+    if (bar) {
+      bar.style.cursor = "pointer";
+      bar.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        if (!song.duration) return;
+        const rect = bar.getBoundingClientRect();
+        const pos = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+        song.currentTime = pos * song.duration;
+      });
+    }
   }
   function loadSong() {
     const url = data.song.url;
