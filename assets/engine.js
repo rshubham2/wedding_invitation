@@ -303,7 +303,7 @@
     return ui.words;
   };
   const OWN_WORDS = ["welcome", "with", "dearAll", "dateT", "storyT", "photosT", "eventsT", "countT", "venueT", "travelT", "stayT", "dressT", "dressLede", "songT", "rsvpT", "contactsT", "shagunT", "shagunLede", "thanksT", "thanksLede", "familyT", "blessT", "darshan", "swagat", "kids"];
-  const pick =(v) => (v && typeof v === "object" && !Array.isArray(v) ? v[lang] ?? v.en ?? "" : v ?? "");
+  const pick = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v[lang] ?? v.en ?? "" : v ?? "");
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   const fmt = (iso, o) => new Intl.DateTimeFormat(t().locale, { timeZone: "Asia/Kolkata", ...o }).format(new Date(iso));
   // Hindi invitations name the part of the day rather than writing am/pm: सुबह 10:30, शाम 7:00.
@@ -362,7 +362,7 @@
   const full = () => occasion() !== "save-the-date";
   // The countdown runs to the first function, or on a save-the-date to the wedding itself.
   const countTarget = () => (full() ? firstEvent() : data.wedding ? { name: { en: "" }, start: data.wedding } : null);
-  const has =(v) => (Array.isArray(v) ? v.length > 0 : !!pick(v));
+  const has = (v) => (Array.isArray(v) ? v.length > 0 : !!pick(v));
   // A function at a venue of its own (a reception across town): its address or map, 2 November 2026.
   const mapOf = (e) => (typeof e?.map === "string" && /^https:\/\//.test(e.map.trim()) ? e.map.trim() : "");
   const ownVenue = (e) => has(e?.address) || !!mapOf(e);
@@ -417,7 +417,7 @@
   async function boot() {
     // The builder previews a draft it keeps in this browser.
     let draft = null;
-    if (SAATH.draft || params.has("draft")) { try { draft = JSON.parse(localStorage.getItem("saath-draft") || "null"); } catch {} }
+    if (SAATH.draft || params.has("draft")) { try { draft = JSON.parse(localStorage.getItem("saath-draft") || "null"); } catch { } }
     data = tidy(draft || SAATH.data || (await (await fetch(`${ROOT}couples/${slug}/invite.json`)).json()));
     let themeId = (params.get("t") || data.theme || "jharokha").replace(/[^a-z0-9-]/gi, "");
     let res = await fetch(`${ROOT}themes/${themeId}/theme.json?v=12`);
@@ -527,7 +527,7 @@
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = `https://fonts.googleapis.com/css2?${families.map((n) => `family=${encodeURIComponent(n).replace(/%20/g, "+")}:ital,wght@0,400;0,500;0,600;1,400`).join("&")}&display=swap`;
-    link.onerror = () => {};
+    link.onerror = () => { };
     document.head.appendChild(link);
     // Some families lack italics or weights; a second, plain request covers them.
     const plain = document.createElement("link");
@@ -677,7 +677,7 @@
       el.style.setProperty("--frost-rgb", dark ? "0 0 0" : "255 252 244");
       el.style.setProperty("--frost-a", "0.22");
     }
-    ctrl.closed?.then((img) => { readGate.img = img; readGate(); }).catch(() => {});
+    ctrl.closed?.then((img) => { readGate.img = img; readGate(); }).catch(() => { });
     // The phone turning, a window resized, the browser's bars coming and going.
     if (window.ResizeObserver) new ResizeObserver(() => fitGate()).observe(gate);
     document.fonts?.ready.then(() => fitGate());
@@ -774,7 +774,7 @@
     opened = true;
     if (!instant && !params.has("play")) startMusic();
     const song = $("#songAudio");
-    if (song) song.play().then(() => { if (song.dataset.live === "1") return; song.pause(); song.currentTime = 0; }).catch(() => {});
+    if (song) song.play().then(() => { if (song.dataset.live === "1") return; song.pause(); song.currentTime = 0; }).catch(() => { });
     const gate = $("#gate");
     gate.classList.add("opening");
     const finish = () => {
@@ -945,23 +945,25 @@
     const tries = [[false, 1], [false, 0.88], [true, 1], [false, 0.76], [true, 0.88], [true, 0.76], [false, 0.66], [true, 0.66]]
       .map(([inline, k]) => [inline, Math.min(k, kMax)]);
     // A theme's calm zone, when given, holds the words; otherwise (or if nothing fits it) search the upper two thirds.
-    const search = (inZone, floor = room, slack = 0) => { for (const [inline, k] of tries) {
-      words.classList.toggle("hw-inline", inline);
-      words.style.setProperty("--hw-k", String(k));
-      if (inline) { const row = words.querySelector(".hw-names"); if (row.scrollWidth > words.clientWidth + 1) continue; }
-      const b = box();
-      const lo = Math.max(inZone ? zone.top * H : 0.04 * H, floor), hi = inZone ? (zone.bottom + slack) * H - b.h : Math.min(0.66 * H, H - b.h - 0.1 * H);
-      if (hi < lo) continue;
-      for (let y = lo; y <= hi + 0.5; y += Math.max(2, H * 0.01)) {
-        const j = judge(b, y);
-        if (!j) continue;
-        // Calm ground first, then enough contrast on every line, then larger words placed higher.
-        // A small shortfall is cured by a light frost; a large one means the words are in the wrong place.
-        const score = j.busy + (j.short <= 0.8 ? 0.04 : 0.12) * j.short + 0.06 * (y / H) + 0.25 * (1 - k) + (inline ? 0.02 : 0);
-        if (!best || score < best.score) best = { y, k, inline, j, score };
+    const search = (inZone, floor = room, slack = 0) => {
+      for (const [inline, k] of tries) {
+        words.classList.toggle("hw-inline", inline);
+        words.style.setProperty("--hw-k", String(k));
+        if (inline) { const row = words.querySelector(".hw-names"); if (row.scrollWidth > words.clientWidth + 1) continue; }
+        const b = box();
+        const lo = Math.max(inZone ? zone.top * H : 0.04 * H, floor), hi = inZone ? (zone.bottom + slack) * H - b.h : Math.min(0.66 * H, H - b.h - 0.1 * H);
+        if (hi < lo) continue;
+        for (let y = lo; y <= hi + 0.5; y += Math.max(2, H * 0.01)) {
+          const j = judge(b, y);
+          if (!j) continue;
+          // Calm ground first, then enough contrast on every line, then larger words placed higher.
+          // A small shortfall is cured by a light frost; a large one means the words are in the wrong place.
+          const score = j.busy + (j.short <= 0.8 ? 0.04 : 0.12) * j.short + 0.06 * (y / H) + 0.25 * (1 - k) + (inline ? 0.02 : 0);
+          if (!best || score < best.score) best = { y, k, inline, j, score };
+        }
+        if (best && best.j.busy < 0.2 && best.j.short <= 0.8) break;
       }
-      if (best && best.j.busy < 0.2 && best.j.short <= 0.8) break;
-    } };
+    };
     if (zone?.bottom) search(true);
     // Words that don't fit the calm zone with that room (long names, or the phone's island) may run
     // a little past its bottom, then sit just under the inset, before they leave the zone to cover
@@ -1111,9 +1113,9 @@
           <div class="inv">
             <p class="inv-lede" lang="${lang}">${esc(parents ? u.blessing : u.ownVoice)}</p>
             ${two(
-              `<p class="name" lang="${lang}">${esc(nm(data.her))}</p>`,
-              `<p class="name" lang="${lang}">${esc(nm(data.him))}</p>`,
-            ).join(`
+      `<p class="name" lang="${lang}">${esc(nm(data.her))}</p>`,
+      `<p class="name" lang="${lang}">${esc(nm(data.him))}</p>`,
+    ).join(`
             <p class="with" lang="${lang}">${esc(u.with)}</p>
             `)}
             ${parents && u.close ? `<p class="caps" lang="${lang}" style="margin-top:12px">${esc(u.close)}</p>` : ""}
@@ -1158,15 +1160,15 @@
       ${frame ? `<div class="timeline-frame">` : ""}
       <div class="timeline">
         ${events().map((e) => {
-          const slot = SLOT_FOR(e);
-          const mood = theme.moods?.[slot]?.accent ? ink(theme.moods[slot].accent) : null;
-          const file = arts.get(e);
-          const img = file ? base + file : null;
-          const i = data.events.indexOf(e);
-          // A function at a venue of its own gives its place, its town and Directions here, and its full
-          // address in the venue section below: given twice, it crowded the list (Surabhi, 5 November
-          // 2026). Only a place left unnamed keeps its address here. walk.js's sheet does the same.
-          return `<article class="tl"${mood ? ` style="--mood:${esc(mood)}"` : ""}>
+      const slot = SLOT_FOR(e);
+      const mood = theme.moods?.[slot]?.accent ? ink(theme.moods[slot].accent) : null;
+      const file = arts.get(e);
+      const img = file ? base + file : null;
+      const i = data.events.indexOf(e);
+      // A function at a venue of its own gives its place, its town and Directions here, and its full
+      // address in the venue section below: given twice, it crowded the list (Surabhi, 5 November
+      // 2026). Only a place left unnamed keeps its address here. walk.js's sheet does the same.
+      return `<article class="tl"${mood ? ` style="--mood:${esc(mood)}"` : ""}>
             ${img ? `<img class="art reveal" src="${img}" alt="" loading="lazy" decoding="async">` : `<span class="art glyph reveal" aria-hidden="true">${ORN}</span>`}
             <div class="txt reveal">
               <span class="caps" lang="${lang}">${esc(fmt(e.start, { weekday: "short", day: "numeric", month: "short" }))}</span>
@@ -1180,7 +1182,7 @@
               ${mapOf(e) ? `<a class="textbtn" href="${esc(mapOf(e))}" target="_blank" rel="noopener" lang="${lang}">${esc(u.directions)}</a>` : ""}
             </div>
           </article>`;
-        }).join("")}
+    }).join("")}
       </div>
       ${frame ? `</div>` : ""}`);
   }
@@ -1217,12 +1219,14 @@
         : onCard ? `<div class="venue-plate reveal"><img class="venue-art" src="${art("venue")}" alt="" loading="lazy" decoding="async"><div class="venue-on">${place}</div></div>` : ""}
       ${data.venue.map ? `<div class="map reveal${art("showMap") ? " map-card" : ""}" id="mapBox">${art("showMap") ? `<button class="map-load" type="button" aria-label="${esc(u.showMap)}"><img src="${esc(art("showMap"))}" alt="${esc(u.showMap)}"></button>` : `<button class="map-load" type="button" lang="${lang}">${esc(u.showMap)}</button>`}</div>
       ${art("mapsBadge") ? `<a class="maps-badge" href="${esc(data.venue.map)}" target="_blank" rel="noopener"><img src="${esc(art("mapsBadge"))}" alt="${esc(u.maps)}"></a>` : `<a class="btn" href="${esc(data.venue.map)}" target="_blank" rel="noopener" lang="${lang}">${esc(u.maps)}</a>`}` : ""}
-      ${places.map(({ evs: [e, ...more] }) => { const map = [e, ...more].map(mapOf).find(Boolean); return `<div class="venue-also reveal">
+      ${places.map(({ evs: [e, ...more] }) => {
+          const map = [e, ...more].map(mapOf).find(Boolean); return `<div class="venue-also reveal">
         <p class="caps venue-for" lang="${lang}">${esc(andList([e, ...more].map((x) => pick(x.name))))}</p>
         ${has(e.place) ? `<p class="venue-name" lang="${lang}">${esc(pick(e.place))}</p>` : ""}
         ${has(e.address) ? `<p class="venue-addr" lang="${lang}">${esc(pick(e.address))}</p>` : ""}
         ${map ? `<a class="btn" href="${esc(map)}" target="_blank" rel="noopener" lang="${lang}">${esc(u.maps)}</a>` : ""}
-      </div>`; }).join("")}`);
+      </div>`;
+        }).join("")}`);
   }
 
   function secTravel() {
@@ -1323,14 +1327,16 @@
         <input class="field" id="rsvpFamily" name="family" autocomplete="name" placeholder="${esc(u.familyPh)}" value="${esc(kept?.family || greetName("en"))}" aria-describedby="rsvpNeed">
         <p class="rsvp-need" id="rsvpNeed" hidden>${esc(u.needFamily)}</p>
         <div class="rows">
-          ${events().map((e) => { const i = data.events.indexOf(e); return `<div class="row">
+          ${events().map((e) => {
+      const i = data.events.indexOf(e); return `<div class="row">
             <span class="row-name"><b lang="${lang}">${esc(pick(e.name))}</b><span>${esc(fmt(e.start, { weekday: "short", day: "numeric", month: "short" }))}</span></span>
             <span class="stepper">
               <button class="step" type="button" data-step="-1" data-row="${i}" aria-label="${esc(u.fewer(pick(e.name)))}"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
               <output id="cnt${i}" aria-live="polite">${kept?.counts?.[e.id] ?? 1}</output>
               <button class="step" type="button" data-step="1" data-row="${i}" aria-label="${esc(u.more(pick(e.name)))}"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10M10 5v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
             </span>
-          </div>`; }).join("")}
+          </div>`;
+    }).join("")}
         </div>
         <button class="btn" type="submit">${WA}<span>${esc(keeps ? u.send : u.waSend)}</span></button>
         <p class="rsvp-note" id="rsvpNote">${esc(keeps ? u.rsvpNote : u.waNote)}</p>
@@ -1447,7 +1453,7 @@
       const at = url.pathname.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)(?:,(\d+)z)?/);
       if (query) q = query;
       else if (at) { q = `${at[1]},${at[2]}`; if (at[3]) z = at[3]; }
-    } catch {}
+    } catch { }
     $("#mapBox").classList.add("loaded");
     $("#mapBox").innerHTML = `<iframe title="${esc(t().mapTitle(pick(data.venue.name)))}" src="https://maps.google.com/maps?q=${encodeURIComponent(q)}&z=${z}&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`;
   }
@@ -1494,7 +1500,7 @@
             if (bgOn) { bg.pause(); setSound(false); }
             box.classList.add("is-playing");
             setBtnPlaying(true);
-          }).catch(() => {});
+          }).catch(() => { });
         }
         return;
       }
@@ -1503,7 +1509,7 @@
       userPaused = false;
       song.dataset.live = "";
       song.pause();
-      try { song.currentTime = 0; } catch {}
+      try { song.currentTime = 0; } catch { }
       box.classList.remove("is-playing");
       setBtnPlaying(false);
       if (prog) prog.style.right = "100%";
@@ -1523,7 +1529,7 @@
           song.play().then(() => {
             box.classList.add("is-playing");
             setBtnPlaying(true);
-          }).catch(() => {});
+          }).catch(() => { });
         } else {
           userPaused = true;
           song.dataset.live = "";
@@ -1690,7 +1696,7 @@
       return n ? c / n : 0;
     };
     const check = () => cleared() > 0.45 && done();
-    btn.addEventListener("pointerdown", (e) => { if (revealed.has(i)) return; down = true; last = pt(e); try { btn.setPointerCapture(e.pointerId); } catch {} scratch(last, last); });
+    btn.addEventListener("pointerdown", (e) => { if (revealed.has(i)) return; down = true; last = pt(e); try { btn.setPointerCapture(e.pointerId); } catch { } scratch(last, last); });
     btn.addEventListener("pointermove", (e) => { if (!down) return; const p = pt(e); scratch(last, p); last = p; if (++moves % 8 === 0) check(); });
     const up = () => { if (down) { down = false; check(); } };
     btn.addEventListener("pointerup", up);
@@ -1796,7 +1802,7 @@
       fetch(`${SAATH.api}/api/rsvp`, { method: "POST", keepalive: true, body: JSON.stringify({ slug: SAATH.slug, guest: reply.guest, family: fam, familyKey: SAATH.familyKey || undefined, counts: reply.counts, lang }) })
         .then((r) => {
           if (!r.ok) throw new Error(String(r.status));
-          try { localStorage.setItem(replyKey, JSON.stringify(reply)); } catch {}
+          try { localStorage.setItem(replyKey, JSON.stringify(reply)); } catch { }
           showDone(reply);
         })
         .catch(() => { if (note) { note.textContent = u.saveFailed; note.classList.add("warn"); } });
@@ -1859,8 +1865,8 @@
 
     // 2. iOS (iPhone / iPad): Direct native Apple Calendar sheet (bypasses file download)
     const ics = [
-      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Saath Studio//Invite//EN", "BEGIN:VEVENT",
-      `UID:${slug}-${ev.id}@saath.studio`, `DTSTAMP:${stamp(new Date().toISOString())}`,
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Wedding//Invite//EN", "BEGIN:VEVENT",
+      `UID:${slug}-${ev.id}@wedding.invite`, `DTSTAMP:${stamp(new Date().toISOString())}`,
       `DTSTART:${stamp(startDate.toISOString())}`, `DTEND:${stamp(endDate.toISOString())}`,
       `SUMMARY:${summary}`,
       location ? `LOCATION:${location}` : null,
@@ -1901,13 +1907,13 @@
   }
   function toggleSound() {
     const a = $("#music");
-    if (a.paused) { a.play().then(() => fade(a, 0.7, 800)).catch(() => {}); setSound(true); }
+    if (a.paused) { a.play().then(() => fade(a, 0.7, 800)).catch(() => { }); setSound(true); }
     else { fade(a, 0, 500); setSound(false); }
   }
   document.addEventListener("visibilitychange", () => {
     const a = $("#music");
     if (document.hidden && !a.paused) { a.pause(); a.dataset.resume = "1"; }
-    else if (!document.hidden && a.dataset.resume) { delete a.dataset.resume; a.play().catch(() => {}); }
+    else if (!document.hidden && a.dataset.resume) { delete a.dataset.resume; a.play().catch(() => { }); }
   });
 
   function setLang(next) {
